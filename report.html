@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JC2503 Coursework Report - Web Application Development</title>
+    <style>
+        /* 报告专用样式 - 简洁清晰，不影响评分 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Georgia', 'Times New Roman', serif;
+            line-height: 1.7;
+            color: #1a1a2e;
+            background: #f5f5f0;
+            padding: 2rem;
+        }
+        
+        .report-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+        
+        h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            color: #34495e;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 0.75rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin: 0.5rem 0;
+        }
+        
+        .figure {
+            margin: 1.5rem 0;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 1.25rem;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .figure strong {
+            display: block;
+            font-size: 1.05rem;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .figure pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            overflow-x: auto;
+            text-align: left;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.55;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .caption {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        code {
+            background: #f0f0f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .ref-list {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .ref-list li {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+            text-indent: -1.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+        }
+        
+        footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #999;
+            border-top: 1px solid #eee;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            .report-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <h1>JC2503 Web Application Development<br>Coursework Report</h1>
+        <div class="subtitle">
+            <strong>Student Name:</strong> [YOUR NAME HERE] &nbsp;|&nbsp;
+            <strong>Student ID:</strong> [YOUR STUDENT ID] &nbsp;|&nbsp;
+            <strong>Date:</strong> May 2026
+        </div>
+
+        <!-- ============ 1. 整体设计 ============ -->
+        <h2>1. Overall System Design</h2>
+        
+        <h3>1.1 Website Structure</h3>
+        <p>
+            [Describe the overall structure of your website: three pages (Home, About, Game), 
+            navigation system, responsive design approach. Explain how you organized the content 
+            and why you chose this structure.]
+        </p>
+        
+        <div class="figure">
+            <strong>Figure 1: Website Architecture</strong>
+            <pre>
+┌─────────────────────────────────────────────────────────┐
+│                     Website (port 8080)                  │
+├─────────────────────────────────────────────────────────┤
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐             │
+│  │   /     │    │ /about  │    │  /game  │             │
+│  │ Home    │    │ About   │    │  Game   │             │
+│  │ Page    │    │  Page   │    │  Page   │             │
+│  └────┬────┘    └────┬────┘    └────┬────┘             │
+│       │              │              │                   │
+│       └──────────────┼──────────────┘                   │
+│                      │                                  │
+│              ┌───────┴───────┐                          │
+│              │  Navigation   │                          │
+│              │  (EJS/HTML)   │                          │
+│              └───────────────┘                          │
+└─────────────────────────────────────────────────────────┘
+            </pre>
+            <div class="caption">Figure 1: High-level website architecture showing three pages with shared navigation.</div>
+        </div>
+
+        <h3>1.2 Technology Stack</h3>
+        <p>
+            [List and explain the technologies used: Node.js, Express, Socket.IO, EJS, HTML5, CSS3. 
+            Explain why each technology was chosen for this project.]
+        </p>
+        
+        <table>
+            <tr><th>Technology</th><th>Purpose</th></tr>
+            <tr><td>Node.js v24.13.0</td><td>Server-side JavaScript runtime</td></tr>
+            <tr><td>Express.js</td><td>Web framework for routing and middleware</td></tr>
+            <tr><td>Socket.IO</td><td>Real-time bidirectional communication</td></tr>
+            <tr><td>EJS</td><td>Template engine for dynamic HTML pages</td></tr>
+            <tr><td>HTML5 / CSS3</td><td>Frontend structure and styling</td></tr>
+        </table>
+
+        <!-- ============ 2. 游戏设计 ============ -->
+        <h2>2. Game Application Design</h2>
+        
+        <h3>2.1 Game Rules Implementation</h3>
+        <p>
+            [Describe how the puzzle game works: 4×4 grid, 16 unique blocks (4 shapes × 4 colours), 
+            turn-based system, random block drawing, placement mechanics, line-clearing logic, 
+            jackpot mechanism, timeout handling.]
+        </p>
+        
+        <h3>2.2 Client-Server Communication (Socket.IO)</h3>
+        <p>
+            [Explain how Socket.IO enables real-time multiplayer functionality. Describe the 
+            event system: which events are emitted from client to server, which from server to 
+            clients. Explain why this architecture is suitable for a multiplayer game.]
+        </p>
+        
+        <div class="figure">
+            <strong>Figure 2: Socket.IO Event Flow</strong>
+            <pre>
+┌──────────┐                    ┌──────────┐
+│ Client A │                    │  Server  │
+└────┬─────┘                    └────┬─────┘
+     │                               │
+     │  "joinGame" (playerName)      │
+     │──────────────────────────────>│
+     │                               │
+     │                    "gameStateUpdate"
+     │<──────────────────────────────│
+     │                               │
+     │          "yourTurn" (block)   │
+     │<──────────────────────────────│
+     │                               │
+     │  "placeBlock" (row, col)      │
+     │──────────────────────────────>│
+     │                               │
+     │                    "boardUpdate"
+     │<──────────────────────────────│
+     │                     "turnChange"
+     │<──────────────────────────────│
+     │                               │
+┌──────────┐                    ┌──────────┐
+│ Client B │                    │  Server  │
+└────┬─────┘                    └────┬─────┘
+     │                               │
+     │                    "gameStateUpdate"
+     │<──────────────────────────────│
+     │                     "turnChange"
+     │<──────────────────────────────│
+            </pre>
+            <div class="caption">Figure 2: Sequence diagram showing Socket.IO event flow between clients and server.</div>
+        </div>
+
+        <h3>2.3 Authoritative Server Architecture</h3>
+        <p>
+            [Explain why game logic is implemented on the server side (gameLogic.js) rather than 
+            the client. Discuss security implications (preventing cheating), consistency for 
+            multiplayer, and the "authoritative server" pattern.]
+        </p>
+        
+        <div class="code-block">
+            // Example: Server-side game state (cannot be tampered by clients)
+            let gameState = {
+                board: Array(16).fill(null),      // Single source of truth
+                players: [],                       // All player data
+                availableBlocks: [],               // Block pool
+                currentPlayerIndex: -1             // Turn management
+            };
+        </div>
+
+        <h3>2.4 Key Algorithms</h3>
+        
+        <h4>Line-Clearing Algorithm</h4>
+        <p>
+            [Describe how the algorithm detects three or more consecutive blocks sharing the 
+            same shape or colour in horizontal, vertical, and diagonal directions. Explain 
+            the directional search approach and how duplicate indices are handled.]
+        </p>
+        
+        <h4>Turn Management and Timeout</h4>
+        <p>
+            [Explain how the server cycles through players, manages the 60-second timeout 
+            per turn, and handles player disconnection or timeout.]
+        </p>
+
+        <!-- ============ 3. 遇到的挑战与解决方案 ============ -->
+        <h2>3. Challenges Faced and Solutions</h2>
+        
+        <h3>3.1 [Challenge 1: e.g., Line-Clearing Algorithm Complexity]</h3>
+        <p>
+            [Describe the challenge: Implementing the line-clearing logic that checks all 
+            four directions for both shape and colour matches was initially complex, 
+            especially handling cases where multiple lines intersect.]
+        </p>
+        <p>
+            <strong>Solution:</strong> [Explain how you solved it: Used a directional search 
+            approach with positive and negative extensions from the placed block position. 
+            Used a Set data structure to eliminate duplicate indices when a block belongs 
+            to multiple lines.]
+        </p>
+        
+        <h3>3.2 [Challenge 2: e.g., Multiplayer State Synchronization]</h3>
+        <p>
+            [Describe the challenge: Ensuring all players see the same game state in 
+            real-time, especially when players join or leave mid-game.]
+        </p>
+        <p>
+            <strong>Solution:</strong> [Explain: Implemented an authoritative server model 
+            where all game logic runs on the server. The server broadcasts state updates 
+            via Socket.IO after every action. New players receive the full state on connection.]
+        </p>
+        
+        <h3>3.3 [Challenge 3: e.g., Timeout Management with Dynamic Player List]</h3>
+        <p>
+            [Describe the challenge: Managing 60-second timeouts correctly when players 
+            join, leave, or their turn is skipped due to timeout.]
+        </p>
+        <p>
+            <strong>Solution:</strong> [Explain: Used JavaScript setTimeout with proper 
+            cleanup (clearTimeout). When a player times out, the server removes them and 
+            recalculates turn order, then sets a new timeout for the next player.]
+        </p>
+
+        <!-- ============ 4. 学到的经验教训 ============ -->
+        <h2>4. Lessons Learned and Reflection</h2>
+        
+        <h3>4.1 Technical Lessons</h3>
+        <p>
+            [Reflect on what you learned: 
+            - Real-time web application development with WebSockets/Socket.IO
+            - Server-side game logic implementation
+            - Turn-based multiplayer game architecture
+            - HTML5/CSS3 responsive design
+            - Modular code organization (separating gameLogic.js from server.js)
+            ]
+        </p>
+        
+        <h3>4.2 Challenges for Future Improvement</h3>
+        <p>
+            [If you had more time, what would you improve? Examples:
+            - Add a chat system for players
+            - Implement different difficulty levels
+            - Add sound effects and animations
+            - Save high scores to a database
+            - Add spectating mode
+            ]
+        </p>
+
+        <!-- ============ 5. 参考文献 ============ -->
+        <h2>5. References</h2>
+        <ul class="ref-list">
+            <li>[1] Socket.IO Documentation. "Socket.IO - Official Documentation." Available at: https://socket.io/docs/ (Accessed: May 2026)</li>
+            <li>[2] Express.js Documentation. "Express - Node.js web application framework." Available at: https://expressjs.com/ (Accessed: May 2026)</li>
+            <li>[3] MDN Web Docs. "HTML5: The HyperText Markup Language." Available at: https://developer.mozilla.org/en-US/docs/Web/HTML (Accessed: May 2026)</li>
+            <li>[4] Node.js Documentation. "Node.js v24.13.0 Documentation." Available at: https://nodejs.org/docs/ (Accessed: May 2026)</li>
+            <li>[5] W3Schools. "CSS Tutorial." Available at: https://www.w3schools.com/css/ (Accessed: May 2026)</li>
+            <li>[6] DeepSeek. (2025). DeepSeek [Large language model]. Used for fixing one CSS class name addition error in the code, specifically the issue where classList.add() cannot handle strings containing spaces.</li>
+        </ul>
+
+        <!-- ============ 6. GenAI 使用声明 ============ -->
+        <h2>6. Generative AI Use Declaration</h2>
+        <p>
+            I used generative AI(DeepSeek) to fix one CSS class name addition error in the code, specifically the issue where classList.add() cannot handle strings containing spaces.
+        </p>
+        
+        <div class="figure" style="background: #fff3cd; border-color: #ffc107;">
+            <strong>GenAI Declaration</strong>
+            <pre style="background: transparent; color: #856404; text-align: left;">
+[ ] I did NOT use any Generative AI tools in the development of this coursework.
+
+[x] I used Generative AI tools for the following purposes (check all that apply):
+    [ ] Proofreading and grammar checking
+    [ ] Generating small code snippets or debugging assistance
+    [ ] Brainstorming ideas or outlining structure
+    [ ] Explaining concepts or documentation
+
+[ ] I used Generative AI extensively, and I have detailed my usage below.
+            </pre>
+        </div>
+        
+        <p>
+            <strong>Specific usage details:</strong>
+        </p>
+        <ul>
+            <li><strong>Tool(s) used:</strong> [e.g., ChatGPT-4, DeepSeek, GitHub Copilot]</li>
+            <li><strong>How it was used:</strong> [e.g., Assisted with debugging the line-clearing algorithm, helped generate CSS layout ideas, proofread the report]</li>
+            <li><strong>Extent of use:</strong> [e.g., Minor assistance only. All core logic and final code structure were written by me.]</li>
+            <li><strong>Reflection:</strong> [e.g., The AI helped me understand certain concepts faster, but all implementation decisions were my own.]</li>
+        </ul>
+        
+        <p>
+            I understand that excessive or unacknowledged use of Generative AI may be 
+            considered a form of academic misconduct. This declaration is made honestly 
+            to the best of my knowledge.
+        </p>
+        
+        <p style="margin-top: 1rem;">
+            <strong>Signed:</strong> [Your Name]<br>
+            <strong>Date:</strong> May 2026
+        </p>
+
+        <!-- ============ 7. 声明 ============ -->
+        <h2>7. Declaration of Originality</h2>
+        <p>
+            I hereby declare that this assignment is entirely my own work, except where 
+            otherwise acknowledged. I have read and understood the University of Aberdeen's 
+            policy on plagiarism and collusion. This work has not been submitted for any 
+            other assessment.
+        </p>
+        
+        <footer>
+            <p>Report completed for JC2503 Web Application Development | University of Aberdeen | May 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

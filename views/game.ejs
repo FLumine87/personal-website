@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Game - Multiplayer Block Puzzle</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>🎮 Multiplayer Puzzle Game</h1>
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/game">Game</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="game-layout">
+            <div class="game-board-container">
+                <div id="game-container">
+                    <div class="game-board" id="game-board">
+                        <div style="text-align: center; padding: 50px;">Loading game board...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-info-container">
+                <div class="game-info">
+                    <div class="current-turn" id="current-turn">
+                        <strong>Current Turn:</strong> <span id="turn-player">Waiting...</span>
+                    </div>
+                    
+                    <div class="current-block" id="current-block-area">
+                        <strong>Your Block:</strong>
+                        <div class="block-preview" id="block-preview">
+                            ?
+                        </div>
+                        <small>Click on an empty cell to place</small>
+                    </div>
+
+                    <div class="player-list">
+                        <h3>👥 Players & Scores</h3>
+                        <ul id="player-scores">
+                            <li>No players yet</li>
+                        </ul>
+                    </div>
+
+                    <div class="scoreboard">
+                        <h3>🏆 Your Score</h3>
+                        <div id="your-score" style="font-size: 2rem; font-weight: bold; text-align: center;">0</div>
+                    </div>
+
+                    <div id="message-area" class="status-message">
+                        Enter your name to start
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 [Your Name] - JC2503 Coursework Assignment | Puzzle Game</p>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // game_vars
+        let myPlayerId = null;
+        let myPlayerName = null;
+        let currentBoard = Array(16).fill(null);
+        let myCurrentBlock = null;
+        let isMyTurn = false;
+        let players = [];
+        let socket = null;
+        
+        // dom_elems
+        const gameBoardEl = document.getElementById('game-board');
+        const turnPlayerEl = document.getElementById('turn-player');
+        const blockPreviewEl = document.getElementById('block-preview');
+        const playerScoresEl = document.getElementById('player-scores');
+        const yourScoreEl = document.getElementById('your-score');
+        const messageArea = document.getElementById('message-area');
+        
+        // utils
+        
+        function showMessage(msg, isError = false) {
+            console.log('Message:', msg);
+            if (!messageArea) return;
+            messageArea.textContent = msg;
+            messageArea.style.background = isError ? '#f8d7da' : '#d4edda';
+            messageArea.style.color = isError ? '#721c24' : '#155724';
+            messageArea.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
+            setTimeout(() => {
+                if (messageArea && messageArea.textContent === msg) {
+                    messageArea.style.background = '#fff3cd';
+                    messageArea.style.color = '#856404';
+                    messageArea.style.borderColor = '#ffc107';
+                }
+            }, 3000);
+        }
+        
+        function getBlockClass(block) {
+            if (!block) return '';
+            return `block-shape-${block.shape} block-color-${block.color}`;
+        }
+        
+        function getBlockSymbol(shape) {
+            const symbols = {
+                circle: '●',
+                square: '■',
+                triangle: '▲',
+                diamond: '◆'
+            };
+            return symbols[shape] || '?';
+        }
+        
+        // render
+        
+        function renderBoard() {
+            if (!gameBoardEl) {
+                console.error('gameBoardEl not found');
+                return;
+            }
+            
+            console.log('Rendering board:', currentBoard);
+            
+            gameBoardEl.innerHTML = '';
+            
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                const block = currentBoard[i];
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+                
+                cell.className = 'game-cell';
+                
+                if (block) {
+                    cell.classList.add('occupied');
+                    cell.classList.add(`block-shape-${block.shape}`, `block-color-${block.color}`);
+                    cell.textContent = getBlockSymbol(block.shape);
+                } else {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                }
+                
+                cell.addEventListener('click', (function(r, c) {
+                    return function() {
+                        console.log('Cell clicked:', r, c, 'isMyTurn:', isMyTurn, 'hasBlock:', !!myCurrentBlock);
+                        
+                        if (!isMyTurn) {
+                            showMessage('Not your turn!', true);
+                            return;
+                        }
+                        
+                        if (!myCurrentBlock) {
+                            showMessage('Waiting for your block...', true);
+                            return;
+                        }
+                        
+                        const boardIndex = r * 4 + c;
+                        if (currentBoard[boardIndex] !== null) {
+                            showMessage('Position already occupied!', true);
+                            return;
+                        }
+                        
+                        if (socket) {
+                            socket.emit('placeBlock', { row: r, col: c }, (response) => {
+                                console.log('Place response:', response);
+                                if (response && response.success) {
+                                    if (response.pointsEarned > 0) {
+                                        showMessage(`+${response.pointsEarned} points!`);
+                                    }
+                                    if (response.jackpot) {
+                                        showMessage('🎉 JACKPOT! +16 points! 🎉');
+                                    }
+                                } else if (response && response.error) {
+                                    showMessage(response.error, true);
+                                }
+                            });
+                        } else {
+                            showMessage('Not connected to server', true);
+                        }
+                    };
+                })(row, col));
+                
+                gameBoardEl.appendChild(cell);
+            }
+        }
+        
+        function updatePlayersAndScores(playersList) {
+            players = playersList || [];
+            console.log('Updating players:', players);
+            
+            if (!playerScoresEl) return;
+            
+            if (players.length === 0) {
+                playerScoresEl.innerHTML = '<li>No players yet</li>';
+                if (yourScoreEl) yourScoreEl.textContent = '0';
+                return;
+            }
+            
+            const currentPlayer = players.find(p => p.id === myPlayerId);
+            if (currentPlayer && yourScoreEl) {
+                yourScoreEl.textContent = currentPlayer.score;
+            }
+            
+            playerScoresEl.innerHTML = players.map(p => `
+                <li class="${p.id === myPlayerId ? 'current-player' : ''}">
+                    <span>${escapeHtml(p.name)} ${p.id === myPlayerId ? '(you)' : ''}</span>
+                    <span style="font-weight: bold;">${p.score} pts</span>
+                </li>
+            `).join('');
+        }
+        
+        function updateCurrentTurn(currentPlayer) {
+            console.log('Updating turn:', currentPlayer);
+            
+            if (!currentPlayer || !turnPlayerEl) {
+                if (turnPlayerEl) turnPlayerEl.textContent = 'Waiting for players...';
+                isMyTurn = false;
+                return;
+            }
+            
+            turnPlayerEl.textContent = currentPlayer.name;
+            isMyTurn = (currentPlayer.id === myPlayerId);
+            
+            if (isMyTurn) {
+                showMessage('It\'s your turn! Place your block.');
+            }
+        }
+        
+        function updateBlockPreview(block) {
+            console.log('Updating block preview:', block);
+            
+            if (!blockPreviewEl) return;
+            
+            if (!block) {
+                blockPreviewEl.innerHTML = '?';
+                blockPreviewEl.className = 'block-preview';
+                return;
+            }
+            
+            blockPreviewEl.innerHTML = getBlockSymbol(block.shape);
+            blockPreviewEl.className = `block-preview block-shape-${block.shape} block-color-${block.color}`;
+        }
+        
+        function highlightClearedBlocks(indices) {
+            if (!gameBoardEl) return;
+            const cells = gameBoardEl.querySelectorAll('.game-cell');
+            indices.forEach(idx => {
+                if (cells[idx]) {
+                    cells[idx].style.transform = 'scale(0.8)';
+                    cells[idx].style.opacity = '0.5';
+                    setTimeout(() => {
+                        if (cells[idx]) {
+                            cells[idx].style.transform = '';
+                            cells[idx].style.opacity = '';
+                        }
+                    }, 300);
+                }
+            });
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // socket_events
+        
+        function initSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('Socket connected, id:', socket.id);
+                myPlayerId = socket.id;
+                showNameDialog();
+            });
+            
+            socket.on('gameStateUpdate', (data) => {
+                console.log('gameStateUpdate received:', data);
+                
+                if (data.board) {
+                    currentBoard = data.board;
+                    renderBoard();
+                }
+                if (data.players) {
+                    updatePlayersAndScores(data.players);
+                }
+                if (data.currentPlayer !== undefined) {
+                    updateCurrentTurn(data.currentPlayer);
+                }
+            });
+            
+            socket.on('boardUpdate', (data) => {
+                console.log('boardUpdate received:', data);
+                
+                if (data.board) {
+                    currentBoard = data.board;
+                    renderBoard();
+                }
+                if (data.scores) {
+                    updatePlayersAndScores(data.scores);
+                    const myPlayer = data.scores.find(s => s.id === myPlayerId);
+                    if (myPlayer && yourScoreEl) {
+                        yourScoreEl.textContent = myPlayer.score;
+                    }
+                }
+            });
+            
+            socket.on('turnChange', (data) => {
+                console.log('turnChange received:', data);
+                updateCurrentTurn({ id: data.playerId, name: data.playerName });
+            });
+            
+            socket.on('yourTurn', (data) => {
+                console.log('yourTurn received:', data);
+                if (data.block) {
+                    myCurrentBlock = data.block;
+                    updateBlockPreview(myCurrentBlock);
+                    if (data.timeLimit) {
+                        showMessage(`Your turn! Time limit: ${data.timeLimit}s`);
+                    }
+                    isMyTurn = true;
+                }
+            });
+            
+            socket.on('blocksCleared', (data) => {
+                console.log('blocksCleared received:', data);
+                if (data.indices && data.indices.length > 0) {
+                    highlightClearedBlocks(data.indices);
+                    showMessage(`+${data.points} points from clearing!`);
+                }
+            });
+            
+            socket.on('jackpot', (data) => {
+                console.log('jackpot received:', data);
+                showMessage(`🎉 ${data.playerName} scored JACKPOT! +${data.points} points! 🎉`);
+            });
+            
+            socket.on('playerJoined', (data) => {
+                console.log('playerJoined received:', data);
+                showMessage(`${data.playerName} joined the game!`);
+            });
+            
+            socket.on('playerLeft', (data) => {
+                console.log('playerLeft received:', data);
+                showMessage(`${data.playerName} left the game${data.reason === 'timeout' ? ' (timeout)' : ''}`);
+                if (socket) {
+                    socket.emit('requestGameState');
+                }
+            });
+            
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+                showMessage('Disconnected from server. Please refresh the page.', true);
+            });
+        }
+        
+        // join_dialog
+        
+        function showNameDialog() {
+            const existingOverlay = document.querySelector('.overlay');
+            if (existingOverlay) existingOverlay.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'name-dialog';
+            dialog.innerHTML = `
+                <h2>Join the Game</h2>
+                <p>Enter your display name:</p>
+                <input type="text" id="player-name-input" placeholder="Your name" maxlength="20" autocomplete="off">
+                <button id="join-game-btn">Join Game</button>
+            `;
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            const input = document.getElementById('player-name-input');
+            const joinBtn = document.getElementById('join-game-btn');
+            
+            function joinGame() {
+                const name = input.value.trim();
+                if (name === '') {
+                    alert('Please enter a name');
+                    return;
+                }
+                
+                console.log('Joining game with name:', name);
+                
+                socket.emit('joinGame', { playerName: name }, (response) => {
+                    console.log('Join response:', response);
+                    if (response && response.success) {
+                        myPlayerName = name;
+                        showMessage(`Welcome, ${name}!`);
+                        overlay.remove();
+                    } else if (response && response.error) {
+                        alert(response.error);
+                    }
+                });
+            }
+            
+            joinBtn.onclick = joinGame;
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') joinGame();
+            };
+            
+            input.focus();
+        }
+        
+        // init
+        
+        function init() {
+            console.log('Initializing game page...');
+            
+            currentBoard = Array(16).fill(null);
+            renderBoard();
+            
+            initSocket();
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
