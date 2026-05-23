@@ -5,6 +5,14 @@
     box-sizing: border-box;
 }
 
+html {
+    transition: opacity 0.4s ease-in-out;
+}
+
+html.fading {
+    opacity: 0;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -19,10 +27,119 @@ body {
 header {
     background: rgba(44, 62, 80, 0.95);
     color: white;
-    padding: 1.5rem 1rem;
-    text-align: center;
+    padding: 1rem;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     backdrop-filter: blur(10px);
+    animation: headerSlideDown 0.5s ease-out;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 100%;
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.header-content nav {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@keyframes headerSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* home page styles */
+.home-page main {
+    margin-top: 0;
+    padding-top: 2rem;
+}
+
+.home-page .hero-section {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.home-page .hero-section h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.home-page .hero-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.home-page .hero-nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.home-page .btn-primary {
+    background: #fff;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.home-page .btn-primary:hover {
+    background: #f8f9fa;
+}
+
+.home-page .btn-secondary {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid white;
+    backdrop-filter: blur(5px);
+}
+
+.home-page .btn-secondary:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+main > * {
+    animation: slideIn 0.6s ease-out;
 }
 
 header h1 {
@@ -43,7 +160,7 @@ nav a {
     color: white;
     text-decoration: none;
     font-weight: 600;
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 1rem;
     border-radius: 25px;
     transition: all 0.3s ease;
     background: rgba(255,255,255,0.1);
@@ -363,9 +480,13 @@ footer {
     background: rgba(44, 62, 80, 0.95);
     color: white;
     text-align: center;
-    padding: 1.5rem;
+    padding: 0.4rem 1rem;
     margin-top: auto;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+}
+
+footer p {
+    margin: 0;
 }
 
 /* responsive */
