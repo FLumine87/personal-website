@@ -17,8 +17,12 @@
                     <li><a href="/game">Game</a></li>
                 </ul>
             </nav>
-        </div>
     </header>
+
+    <button id="theme-toggle" class="theme-toggle fixed-position" aria-label="Toggle dark/light theme">
+        <img class="theme-icon sun-icon" src="/images/sun.svg" alt="Light mode" width="20" height="20">
+        <img class="theme-icon moon-icon" src="/images/moon.svg" alt="Dark mode" width="20" height="20">
+    </button>
 
     <main>
         <div class="game-layout">
@@ -421,11 +425,31 @@
             input.focus();
         }
         
+        // theme toggle
+        
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Check localStorage first, default to light theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // Toggle theme on button click
+            themeToggle?.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+        
         // init
         
         function init() {
             console.log('Initializing game page...');
             
+            initThemeToggle();
             currentBoard = Array(16).fill(null);
             renderBoard();
             
