@@ -1,5 +1,5 @@
 // gm_config
-const SHAPES = ['circle', 'square', 'triangle', 'diamond'];
+const SHAPES = ['circle', 'square', 'triangle', 'star'];
 const COLORS = ['red', 'blue', 'green', 'yellow'];
 
 // gm_state

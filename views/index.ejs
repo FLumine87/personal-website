@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - My Personal Website</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="home-page">
@@ -22,7 +28,7 @@
             </div>
         </div>
         
-        <div class="two-column">
+        <div class="container">
             <section>
                 <h2>About Me</h2>
                 <p>Hello! I'm a Computing Science student at the University of Aberdeen, currently in my second year.</p>
@@ -31,9 +37,7 @@
                 <div class="mt-2">
                     <a href="/game" class="btn">Play the Game →</a>
                 </div>
-            </section>
 
-            <aside>
                 <h3>Quick Facts</h3>
                 <ul>
                     <li>🎓 Studying: Computing Science</li>
@@ -43,7 +47,7 @@
                 </ul>
                 <h3>Course Info</h3>
                 <p>JC2503 - Web Application Development<br>University of Aberdeen</p>
-            </aside>
+            </section>
         </div>
     </main>
 

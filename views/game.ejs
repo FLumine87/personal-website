@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Puzzle Game - Multiplayer Block Puzzle</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -69,7 +75,7 @@
     </main>
 
     <footer>
-        <p>© 2025 [Your Name] - JC2503 Coursework Assignment | Puzzle Game</p>
+        <p>© 2025 Gu Hao - JC2503 Coursework Assignment | Puzzle Game</p>
     </footer>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -119,7 +125,7 @@
                 circle: '●',
                 square: '■',
                 triangle: '▲',
-                diamond: '◆'
+                star: '★'
             };
             return symbols[shape] || '?';
         }

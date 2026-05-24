@@ -1,34 +1,42 @@
 /* Theme Variables */
 :root {
-    --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #f8f9fa;
-    --bg-header: rgba(44, 62, 80, 0.95);
-    --text-primary: #333333;
-    --text-secondary: #2c3e50;
-    --text-tertiary: #34495e;
+    /* Background image settings */
+    --bg-image-light: url('/images/light.jpg');
+    --bg-image-dark: url('/images/dark.jpg');
+    
+    /* Overlay colors for readability */
+    --bg-overlay-light: rgba(255, 255, 255, 0.75);
+    --bg-overlay-dark: rgba(0, 0, 0, 0.65);
+    
+    --bg-secondary: rgba(255, 255, 255, 0.92);
+    --bg-tertiary: rgba(248, 249, 250, 0.95);
+    --bg-header: rgba(44, 62, 80, 0.92);
+    --text-primary: #2c3e50;
+    --text-secondary: #34495e;
+    --text-tertiary: #7f8c8d;
     --text-white: #ffffff;
-    --border-color: #ddd;
+    --border-color: rgba(221, 221, 221, 0.8);
     --game-cell-empty: #bdc3c7;
     --game-cell-occupied: #ffffff;
-    --game-board-bg: #2c3e50;
+    --game-board-bg: rgba(44, 62, 80, 0.9);
     --game-cell-bg: #ecf0f1;
 }
 
 /* Dark Theme */
 [data-theme="dark"] {
-    --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    --bg-secondary: #1e1e2e;
-    --bg-tertiary: #2d2d3f;
-    --bg-header: rgba(22, 33, 62, 0.95);
+    --bg-overlay-light: rgba(26, 26, 46, 0.85);
+    --bg-overlay-dark: rgba(0, 0, 0, 0.75);
+    
+    --bg-secondary: rgba(30, 30, 46, 0.92);
+    --bg-tertiary: rgba(45, 45, 63, 0.95);
+    --bg-header: rgba(22, 33, 62, 0.92);
     --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --text-tertiary: #c0c0c0;
-    --text-white: #ffffff;
-    --border-color: #444;
+    --text-secondary: #bdbdbd;
+    --text-tertiary: #9e9e9e;
+    --border-color: rgba(68, 68, 68, 0.8);
     --game-cell-empty: #3d3d5c;
     --game-cell-occupied: #2d2d3f;
-    --game-board-bg: #1a1a2e;
+    --game-board-bg: rgba(26, 26, 46, 0.95);
     --game-cell-bg: #2d2d3f;
 }
 
@@ -50,12 +58,40 @@ html.fading {
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
-    background: var(--bg-primary);
+    background-image: var(--bg-image-light);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    position: relative;
+    transition: all 0.5s ease;
+}
+
+/* Overlay layer for better readability */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-overlay-light);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color 0.5s ease;
+}
+
+/* Dark theme background image */
+[data-theme="dark"] body {
+    background-image: var(--bg-image-dark);
+}
+
+[data-theme="dark"] body::before {
+    background: var(--bg-overlay-dark);
 }
 
 /* header */
@@ -166,14 +202,14 @@ body.home-page .theme-toggle {
 .home-page .hero-section {
     text-align: center;
     padding: 3rem 2rem;
-    color: white;
+    color: var(--text-primary);
     margin-bottom: 2rem;
 }
 
 .home-page .hero-section h1 {
     font-size: 3rem;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
     animation: fadeInUp 0.8s ease-out;
 }
 
@@ -192,23 +228,37 @@ body.home-page .theme-toggle {
 }
 
 .home-page .btn-primary {
-    background: #fff;
-    color: #667eea;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #0083b0;
     font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .home-page .btn-primary:hover {
-    background: #f8f9fa;
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .home-page .btn-secondary {
-    background: rgba(255,255,255,0.2);
-    border: 2px solid white;
-    backdrop-filter: blur(5px);
+    background: #0083b0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .home-page .btn-secondary:hover {
-    background: rgba(255,255,255,0.3);
+    background: #00688b;
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes fadeInUp {
@@ -283,20 +333,26 @@ main {
 .two-column section {
     flex: 3;
     background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 2rem;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .two-column aside {
     flex: 1;
     background: var(--bg-tertiary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 1.5rem;
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     align-self: start;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .game-layout {
@@ -318,10 +374,13 @@ main {
 /* game_board */
 #game-container {
     background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 15px;
     padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .game-board {
@@ -330,9 +389,11 @@ main {
     gap: 10px;
     aspect-ratio: 1 / 1;
     background: var(--game-board-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 15px;
     border-radius: 10px;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .game-cell {
@@ -362,7 +423,6 @@ main {
 
 .game-cell.occupied {
     cursor: default;
-    background: var(--game-cell-occupied);
 }
 
 .block-shape-circle::before {
@@ -380,8 +440,8 @@ main {
     font-size: 2rem;
 }
 
-.block-shape-diamond::before {
-    content: "◆";
+.block-shape-star::before {
+    content: "★";
     font-size: 2rem;
 }
 
@@ -393,28 +453,38 @@ main {
 /* game_info */
 .game-info {
     background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-radius: 15px;
     padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .current-turn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%); */
+    background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-white);
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1.5rem;
     text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .current-block {
     background: var(--bg-tertiary);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 1rem;
     border-radius: 10px;
     margin-bottom: 1.5rem;
     text-align: center;
-    transition: background-color 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
 }
 
 .block-preview {
@@ -436,7 +506,7 @@ main {
 
 .player-list h3 {
     margin-bottom: 0.5rem;
-    color: #2c3e50;
+    color: var(--text-secondary);
 }
 
 .player-list ul {
@@ -455,7 +525,7 @@ main {
 }
 
 .player-list .current-player {
-    background: #667eea;
+    background: #0083b0;
     color: white;
     font-weight: bold;
 }
@@ -503,14 +573,17 @@ input, button {
     left: 50%;
     transform: translate(-50%, -50%);
     background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     color: var(--text-primary);
     padding: 2rem;
     border-radius: 15px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     z-index: 1000;
     text-align: center;
     min-width: 300px;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .name-dialog input {
@@ -526,7 +599,7 @@ input, button {
 }
 
 .name-dialog button {
-    background: #667eea;
+    background: #0083b0;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -537,7 +610,7 @@ input, button {
 }
 
 .name-dialog button:hover {
-    background: #764ba2;
+    background: #00688b;
 }
 
 .overlay {
@@ -553,7 +626,7 @@ input, button {
 /* btn */
 .btn {
     display: inline-block;
-    background: #667eea;
+    background: #0083b0;
     color: white;
     padding: 0.5rem 1rem;
     border: none;
@@ -564,7 +637,7 @@ input, button {
 }
 
 .btn:hover {
-    background: #764ba2;
+    background: #00688b;
     transform: translateY(-2px);
 }
 
@@ -572,7 +645,7 @@ input, button {
 h2 {
     color: var(--text-secondary);
     margin-bottom: 1rem;
-    border-bottom: 3px solid #667eea;
+    border-bottom: 3px solid #0083b0;
     padding-bottom: 0.5rem;
     display: inline-block;
     transition: color 0.3s ease;
