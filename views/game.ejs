@@ -15,7 +15,7 @@
 <body>
     <header>
         <div class="header-content">
-            <h1>🎮 Multiplayer Puzzle Game</h1>
+            <h1>Multiplayer Puzzle Game</h1>
             <nav>
                 <ul>
                     <li><a href="/">Home</a></li>
@@ -23,27 +23,20 @@
                     <li><a href="/game">Game</a></li>
                 </ul>
             </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <img class="theme-icon sun-icon" src="/images/sun.svg" alt="Light mode" width="20" height="20">
+                <img class="theme-icon moon-icon" src="/images/moon.svg" alt="Dark mode" width="20" height="20">
+            </button>
+        </div>
     </header>
-
-    <button id="theme-toggle" class="theme-toggle fixed-position" aria-label="Toggle dark/light theme">
-        <img class="theme-icon sun-icon" src="/images/sun.svg" alt="Light mode" width="20" height="20">
-        <img class="theme-icon moon-icon" src="/images/moon.svg" alt="Dark mode" width="20" height="20">
-    </button>
 
     <main>
         <div class="game-layout">
-            <div class="game-board-container">
-                <div id="game-container">
-                    <div class="game-board" id="game-board">
-                        <div style="text-align: center; padding: 50px;">Loading game board...</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="game-info-container">
                 <div class="game-info">
                     <div class="current-turn" id="current-turn">
                         <strong>Current Turn:</strong> <span id="turn-player">Waiting...</span>
+                        <div id="timer-display" class="timer-display"></div>
                     </div>
                     
                     <div class="current-block" id="current-block-area">
@@ -68,6 +61,14 @@
 
                     <div id="message-area" class="status-message">
                         Enter your name to start
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-board-container">
+                <div id="game-container">
+                    <div class="game-board" id="game-board">
+                        <div style="text-align: center; padding: 50px;">Loading game board...</div>
                     </div>
                 </div>
             </div>
@@ -98,6 +99,25 @@
         const messageArea = document.getElementById('message-area');
         
         // utils
+        
+        function updateTimerDisplay(timeRemaining) {
+            const timerEl = document.getElementById('timer-display');
+            if (timerEl) {
+                if (timeRemaining > 0) {
+                    timerEl.textContent = `Time Left: ${timeRemaining}s`;
+                    timerEl.style.display = 'block';
+                    if (timeRemaining <= 10) {
+                        timerEl.style.color = '#e74c3c';
+                        timerEl.style.fontWeight = 'bold';
+                    } else {
+                        timerEl.style.color = '#2ecc71';
+                        timerEl.style.fontWeight = 'normal';
+                    }
+                } else {
+                    timerEl.style.display = 'none';
+                }
+            }
+        }
         
         function showMessage(msg, isError = false) {
             console.log('Message:', msg);
@@ -311,6 +331,9 @@
                 if (data.currentPlayer !== undefined) {
                     updateCurrentTurn(data.currentPlayer);
                 }
+                if (data.timeRemaining !== undefined) {
+                    updateTimerDisplay(data.timeRemaining);
+                }
             });
             
             socket.on('boardUpdate', (data) => {
@@ -334,14 +357,17 @@
                 updateCurrentTurn({ id: data.playerId, name: data.playerName });
             });
             
+            socket.on('timeUpdate', (data) => {
+                console.log('timeUpdate received:', data);
+                updateTimerDisplay(data.timeRemaining);
+            });
+            
             socket.on('yourTurn', (data) => {
                 console.log('yourTurn received:', data);
                 if (data.block) {
                     myCurrentBlock = data.block;
                     updateBlockPreview(myCurrentBlock);
-                    if (data.timeLimit) {
-                        showMessage(`Your turn! Time limit: ${data.timeLimit}s`);
-                    }
+                    showMessage('It\'s your turn! Place your block.');
                     isMyTurn = true;
                 }
             });
@@ -367,6 +393,18 @@
             socket.on('playerLeft', (data) => {
                 console.log('playerLeft received:', data);
                 showMessage(`${data.playerName} left the game${data.reason === 'timeout' ? ' (timeout)' : ''}`);
+                
+                if (data.playerId === myPlayerId || data.reason === 'timeout') {
+                    if (data.playerId === myPlayerId) {
+                        myPlayerId = null;
+                        myPlayerName = null;
+                        isMyTurn = false;
+                        myCurrentBlock = null;
+                        updateBlockPreview(null);
+                        showTimeoutOptions();
+                    }
+                }
+                
                 if (socket) {
                     socket.emit('requestGameState');
                 }
@@ -379,6 +417,37 @@
         }
         
         // join_dialog
+        
+        function showTimeoutOptions() {
+            const existingOverlay = document.querySelector('.overlay');
+            if (existingOverlay) existingOverlay.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'name-dialog';
+            dialog.innerHTML = `
+                <h2>Time's Up!</h2>
+                <p>You were removed from the game due to timeout.</p>
+                <div class="timeout-buttons">
+                    <button id="replay-btn" class="btn-primary">🔄 Rejoin Game</button>
+                    <button id="cancel-btn" class="btn-secondary">❌ Close</button>
+                </div>
+            `;
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            document.getElementById('replay-btn').onclick = () => {
+                overlay.remove();
+                showNameDialog();
+            };
+            
+            document.getElementById('cancel-btn').onclick = () => {
+                overlay.remove();
+            };
+        }
         
         function showNameDialog() {
             const existingOverlay = document.querySelector('.overlay');

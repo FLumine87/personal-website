@@ -21,7 +21,36 @@ app.get('/about', (req, res) => res.render('about'));
 app.get('/game', (req, res) => res.render('game'));
 app.get('/report', (req, res) => res.sendFile(path.join(__dirname, 'report.html')));
 
+// Set up callback for player removal (e.g., timeout)
+gameLogic.setOnPlayerRemovedCallback((result) => {
+    if (result && result.removedPlayer) {
+        io.emit('gameStateUpdate', gameLogic.getGameState());
+        io.emit('playerLeft', {
+            playerId: result.removedPlayer.id,
+            playerName: result.removedPlayer.name,
+            reason: result.isTimeout ? 'timeout' : 'disconnect'
+        });
+        
+        const currentPlayer = gameLogic.getCurrentPlayer();
+        if (currentPlayer && result.wasCurrentPlayer && gameLogic.getPlayers().length > 0) {
+            io.emit('turnChange', {
+                playerId: currentPlayer.id,
+                playerName: currentPlayer.name
+            });
+            io.to(currentPlayer.id).emit('yourTurn', {
+                block: gameLogic.getPlayerCurrentBlock(currentPlayer.id),
+                timeLimit: gameLogic.getTurnTimeoutDuration() / 1000
+            });
+        }
+    }
+});
+
 // socket_events
+
+setInterval(() => {
+    const timeRemaining = gameLogic.getTimeRemaining ? gameLogic.getTimeRemaining() : 0;
+    io.emit('timeUpdate', { timeRemaining: timeRemaining });
+}, 1000);
 
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
@@ -43,6 +72,9 @@ io.on('connection', (socket) => {
                     block: currentBlock,
                     timeLimit: gameLogic.getTurnTimeoutDuration() / 1000
                 });
+            } else {
+                const timeRemaining = gameLogic.getTimeRemaining();
+                socket.emit('timeUpdate', { timeRemaining: timeRemaining });
             }
         }
         

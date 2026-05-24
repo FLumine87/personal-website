@@ -9,8 +9,16 @@ let gameState = {
     players: [],
     currentPlayerIndex: -1,
     turnTimeout: null,
-    turnTimeoutDuration: 60000
+    turnTimeoutDuration: 60000,
+    turnStartTime: null,
+    turnTimeRemaining: 60000
 };
+
+let onPlayerRemovedCallback = null;
+
+function setOnPlayerRemovedCallback(callback) {
+    onPlayerRemovedCallback = callback;
+}
 
 // utils
 
@@ -145,6 +153,8 @@ function moveToNextPlayer() {
     
     if (gameState.players.length === 0) {
         gameState.currentPlayerIndex = -1;
+        gameState.turnStartTime = null;
+        gameState.turnTimeRemaining = 0;
         return null;
     }
     
@@ -153,6 +163,9 @@ function moveToNextPlayer() {
     
     const newBlock = getRandomBlock();
     nextPlayer.currentBlock = newBlock;
+    
+    gameState.turnStartTime = Date.now();
+    gameState.turnTimeRemaining = gameState.turnTimeoutDuration;
     
     gameState.turnTimeout = setTimeout(() => {
         const currentPlayer = gameState.players[gameState.currentPlayerIndex];
@@ -247,6 +260,9 @@ function addPlayer(socketId, playerName) {
         const firstBlock = getRandomBlock();
         gameState.players[0].currentBlock = firstBlock;
         
+        gameState.turnStartTime = Date.now();
+        gameState.turnTimeRemaining = gameState.turnTimeoutDuration;
+        
         gameState.turnTimeout = setTimeout(() => {
             if (gameState.players[0]) {
                 removePlayer(gameState.players[0].id, true);
@@ -278,6 +294,10 @@ function removePlayer(playerId, isTimeout = false) {
         gameState.currentPlayerIndex = -1;
         gameState.board.fill(null);
         gameState.availableBlocks = generateAllBlocks();
+        
+        if (onPlayerRemovedCallback) {
+            onPlayerRemovedCallback({ removedPlayer, wasCurrentPlayer, isTimeout });
+        }
         return { removedPlayer, wasCurrentPlayer, isTimeout };
     }
     
@@ -293,6 +313,9 @@ function removePlayer(playerId, isTimeout = false) {
             const newBlock = getRandomBlock();
             nextPlayer.currentBlock = newBlock;
             
+            gameState.turnStartTime = Date.now();
+            gameState.turnTimeRemaining = gameState.turnTimeoutDuration;
+            
             gameState.turnTimeout = setTimeout(() => {
                 if (gameState.players[gameState.currentPlayerIndex]) {
                     removePlayer(gameState.players[gameState.currentPlayerIndex].id, true);
@@ -300,11 +323,16 @@ function removePlayer(playerId, isTimeout = false) {
             }, gameState.turnTimeoutDuration);
         } else {
             gameState.currentPlayerIndex = -1;
+            gameState.turnStartTime = null;
+            gameState.turnTimeRemaining = 0;
         }
     } else if (gameState.currentPlayerIndex > index) {
         gameState.currentPlayerIndex--;
     }
     
+    if (onPlayerRemovedCallback) {
+        onPlayerRemovedCallback({ removedPlayer, wasCurrentPlayer, isTimeout });
+    }
     return { removedPlayer, wasCurrentPlayer, isTimeout };
 }
 
@@ -321,8 +349,18 @@ function getGameState() {
         currentPlayer: gameState.currentPlayerIndex >= 0 && gameState.players.length > 0 ? {
             id: gameState.players[gameState.currentPlayerIndex].id,
             name: gameState.players[gameState.currentPlayerIndex].name
-        } : null
+        } : null,
+        timeRemaining: getTimeRemaining()
     };
+}
+
+function getTimeRemaining() {
+    if (gameState.turnStartTime === null) {
+        return 0;
+    }
+    const elapsed = Date.now() - gameState.turnStartTime;
+    const remaining = Math.max(0, gameState.turnTimeoutDuration - elapsed);
+    return Math.ceil(remaining / 1000);
 }
 
 function getBoardAndScores() {
@@ -374,6 +412,7 @@ module.exports = {
     removePlayer,
     executePlacement,
     resetGame,
+    setOnPlayerRemovedCallback,
     
     getGameState,
     getBoardAndScores,
@@ -381,6 +420,8 @@ module.exports = {
     getPlayerCurrentBlock,
     getPlayerName,
     playerExists,
+    getTimeRemaining,
+    getPlayers: () => gameState.players,
     
     getTurnTimeoutDuration: () => gameState.turnTimeoutDuration,
     
