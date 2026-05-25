@@ -206,14 +206,6 @@ function executePlacement(playerId, row, col) {
     
     let totalPoints = 0;
     let clearedIndices = [];
-    
-    const elimination = checkAndClearLines(row, col);
-    if (elimination.points > 0) {
-        player.score += elimination.points;
-        totalPoints += elimination.points;
-        clearedIndices = elimination.clearedIndices;
-    }
-    
     let jackpot = false;
     if (isBoardFull()) {
         const allBlocks = gameState.board.filter(cell => cell !== null);
@@ -222,6 +214,14 @@ function executePlacement(playerId, row, col) {
         player.score += 16;
         totalPoints += 16;
         jackpot = true;
+    } else {
+        // 棋盘未满时才检查消除条件
+        const elimination = checkAndClearLines(row, col);
+        if (elimination.points > 0) {
+            player.score += elimination.points;
+            totalPoints += elimination.points;
+            clearedIndices = elimination.clearedIndices;
+        }
     }
     
     const nextPlayer = moveToNextPlayer();

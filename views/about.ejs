@@ -31,47 +31,69 @@
     </header>
 
     <main>
-        <div class="two-column">
+        <!-- 第一块：My Focus Area - 全宽 -->
+        <div class="full-width-section">
             <section>
-                <h2>Academic Journey</h2>
-                <p>I am passionate about creating software that is both functional and enjoyable to use. Throughout my studies, I have developed strong foundations in:</p>
-                
-                <h3>Courses I've Taken</h3>
-                <ul>
-                    <li><strong>CS1520</strong> - Programming with Data Structures (Java)</li>
-                    <li><strong>CS2013</strong> - Database Management (SQL, Database Design)</li>
-                    <li><strong>CS2523</strong> - Human-Computer Interaction (UX Research, Prototyping)</li>
-                    <li><strong>JC2503</strong> - Web Application Development (Node.js, Express, Socket.IO)</li>
-                </ul>
-
-                <h3>Technical Skills</h3>
-                <ul>
-                    <li>Frontend: HTML5, CSS3, JavaScript, React (learning)</li>
-                    <li>Backend: Node.js, Express, Socket.IO</li>
-                    <li>Databases: MongoDB, MySQL</li>
-                    <li>Tools: Git, VS Code, Postman</li>
-                </ul>
-
-                <h3>Current Focus</h3>
-                <p>I'm particularly interested in real-time web applications and multiplayer games. This puzzle game project has given me hands-on experience with WebSockets and state synchronization.</p>
+                <img src="/images/head.jpg" alt="My Avatar" class="avatar">
+                <div class="content">
+                    <h2>My Focus Area</h2>
+                    <p>I am particularly interested in real time computer vision systems and embedded AI applications, especially in competitive robotics environments where every millisecond matters. Outside of study, I enjoy outdoor landscapes and photography.</p>
+                </div>
             </section>
+        </div>
+
+        <!-- 第二块：两栏布局 -->
+        <div class="two-column">
+            <div class="left-column">
+                <!-- 左侧第一个块 -->
+                <section>
+                    <h3>Courses I Have Taken</h3>
+                    <ul>
+                        <li>Data Structures and Algorithms</li>
+                        <li>Introduction to Software Engineering</li>
+                        <li>Introduction to Data Structures</li>
+                        <li>Object Oriented Programming</li>
+                        <li>Fundamentals of Machine Learning</li>
+                    </ul>
+
+                    <h3>Technical Skills</h3>
+                    <p>I work mainly with C++, Python, and JavaScript. I have experience with OpenCV, Node.js, Vue.js, MySQL, and tools like Git, Linux, Docker, and ROS2.</p>
+                </section>
+
+                <!-- 左侧第二个块 -->
+                <section>
+                    <h3>My Experience in RoboMaster</h3>
+                    <p>I currently lead the algorithm team for my university's RoboMaster VANGUARD team. When I first joined, I had no idea how much pressure and excitement robotics competitions could bring.</p>
+                    <div class="image-with-text">
+                        <div class="text-content">
+                            <p>One of the biggest challenges I faced was the communication between our vision system and navigation system. In the previous season, they kept conflicting. Coordinate frames did not match, and the system often froze under heavy load. I decided to rebuild the communication SDK from scratch. It took weeks of debugging and late nights, but when it finally worked, our sentry robot performed better than ever. That season, we won 5th place in the Southern Region single armour category. Seeing our robot track and hit targets reliably made all the hard work feel worthwhile.</p>
+                            <p>Staying up until dawn was not always painful. The sunrises over the suburban campus, with empty streets and the faint smell of soldering iron still in the air, became oddly memorable. Watching the sky turn from dark blue to pale orange while the last bug finally disappeared from the log made the exhaustion feel like a small price to pay.</p>
+                        </div>
+                        <div class="image-content">
+                            <img src="/images/sunset.jpg" alt="Sunset over campus" class="sunset-image">
+                        </div>
+                    </div>
+                    <p>RoboMaster has been more than just a competition for me. It is where I learned how to turn theory into reality, how to fail and fix things quickly, and how to grow as both an engineer and a leader.</p>
+
+                    <h3>What I Want to Learn Next</h3>
+                    <p>Currently, end-to-end vision systems built on CNN are becoming the new wave. Combining this with multi-dimensional perception modules such as radar and autonomous decision-making for navigation is not only the direction of the industry but also my next goal.</p>
+                </section>
+            </div>
 
             <aside>
                 <h3>Beyond Academics</h3>
-                <img src="/images/hobby.jpg" alt="My hobby" style="width: 100%;">
                 <p>When I'm not coding, you can find me:</p>
                 <ul>
-                    <li>♟️ Playing chess online</li>
-                    <li>🚶‍♂️ Hiking in the Scottish Highlands</li>
-                    <li>📚 Reading sci-fi novels</li>
-                    <li>🎮 Designing indie games</li>
+                    <li>🥾 Hiking in Baiyun Mountain</li>
+                    <li>📸 Taking landscape photos while hiking</li>
+                    <li>😴 Sleeping in bed</li>
+                    <li>🚶‍♂️ Traveling in Teyvat</li>
                 </ul>
-                <h3>Achievements</h3>
-                <ul>
-                    <li>🏆 Hackathon Participant 2024</li>
-                    <li>📊 Dean's List (2023-2024)</li>
-                    <li>🎯 JavaScript Algorithms Certification</li>
-                </ul>
+                <h3>Memories & Records</h3>
+                <div class="photo-album" onclick="changePhoto()">
+                    <img src="/images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image">
+                </div>
+                <p class="album-hint">👆 Click to explore</p>
             </aside>
         </div>
     </main>
@@ -81,6 +103,29 @@
     </footer>
 
     <script>
+        // Photo album functionality
+        let currentPhotoIndex = 0;
+        const photos = [
+            '/images/00cb880efb06e3744df38a1a6097b7e.jpg',
+            '/images/f3c180aa596f4b2498795914aa761f0.jpg',
+            '/images/TX1_0065.jpg',
+            '/images/d6a21a7f70d1f281cf5760722d0aa77.jpg',
+            '/images/WU1_1798.jpg',
+        ];
+        
+        function changePhoto() {
+            currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+            const imageElement = document.getElementById('album-image');
+            const indicatorElement = document.getElementById('photo-indicator');
+            
+            if (imageElement) {
+                imageElement.src = photos[currentPhotoIndex];
+            }
+            if (indicatorElement) {
+                indicatorElement.textContent = `${currentPhotoIndex + 1}/${photos.length}`;
+            }
+        }
+        
         // Theme toggle functionality
         function initThemeToggle() {
             const themeToggle = document.getElementById('theme-toggle');
