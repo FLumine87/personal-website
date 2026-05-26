@@ -106,6 +106,13 @@
             box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
         }
 
+        .figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
         .caption {
             margin-top: 0.75rem;
             font-size: 0.85rem;
@@ -189,273 +196,108 @@
     <div class="report-container">
         <h1>JC2503 Web Application Development<br>Coursework Report</h1>
         <div class="subtitle">
-            <strong>Student Name:</strong> [YOUR NAME HERE] &nbsp;|&nbsp;
-            <strong>Student ID:</strong> [YOUR STUDENT ID] &nbsp;|&nbsp;
+            <strong>Student Name:</strong> Gu Hao &nbsp;|&nbsp;
+            <strong>Student ID:</strong> 50098805 &nbsp;|&nbsp;
             <strong>Date:</strong> May 2026
         </div>
 
-        <!-- ============ 1. 引言 ============ -->
+        <!-- ============ 1. Introduction ============ -->
         <h2>1. Introduction</h2>
         <p>
-            This report documents the development of a real-time multiplayer puzzle game web application for the JC2503 Web Application Development coursework. The project aims to demonstrate proficiency in full-stack web development using modern technologies including Node.js, Express.js, Socket.IO, and EJS templating.
-        </p>
-        <p>
-            The application implements a turn-based 4×4 grid puzzle game where players take turns placing blocks with unique shapes and colors. The game features real-time multiplayer functionality, automatic line-clearing scoring, time-based turns, and an authoritative server architecture to ensure fair and consistent gameplay across all clients.
-        </p>
-        <p>
-            The following sections detail the website structure, game design, client-server communication mechanisms, technical challenges encountered during development, and the lessons learned throughout the process.
+            This report describes the design and implementation of a personal website and a multiplayer puzzle game. It covers the website structure, game logic, client-server communication, and reflections on the development process.
         </p>
 
-        <!-- ============ 2. 网站整体设计 ============ -->
+        <!-- ============ 2. Website Structure ============ -->
         <h2>2. Website Structure</h2>
-        
-        <h3>2.1 Page Architecture</h3>
         <p>
-            The website consists of three main pages: Home, About, and Game, all served through Express.js with EJS templates. 
-            The Home page serves as the entry point, featuring a brief introduction to the puzzle game and navigation links. 
-            The About page provides detailed information about the game rules, objectives, and technical overview. 
-            The Game page contains the core gameplay interface with the 4×4 grid, player information panel, and real-time status updates.
+            The website is built using Node.js<sup>[3]</sup> with Express<sup>[2]</sup> as the web framework and EJS for dynamic page rendering<sup>[5]</sup>. Socket.IO<sup>[1]</sup> enables real-time multiplayer functionality in the puzzle game. The project follows a standard server-side architecture with route handling, game logic, and views clearly separated.
         </p>
         <p>
-            A shared navigation bar is implemented across all pages using EJS partials, ensuring consistent user experience. 
-            The responsive design approach uses CSS flexbox and media queries to adapt to different screen sizes, 
-            from desktop monitors to mobile devices. The three-page structure was chosen to separate concerns: 
-            presentation (Home), documentation (About), and interaction (Game), making the application modular and maintainable.
+            The application consists of three main pages: the <strong>Home page</strong> (<code>/</code>) provides a personal introduction with navigation links; the <strong>About page</strong> (<code>/about</code>) displays detailed academic background and interests; and the <strong>Game page</strong> (<code>/game</code>) offers a multiplayer block puzzle experience with real-time player interactions.
         </p>
-        
+        <p>
+            Static assets including CSS stylesheets<sup>[4]</sup> and image resources are served from the <code>public</code> directory. The server (<code>server.js</code>) handles all routing, WebSocket connections, and game logic coordination, while view templates in the <code>views</code> directory render the actual pages using EJS. This separation of concerns ensures maintainability and clear organization of the codebase.
+        </p>
+
         <div class="figure">
-            <strong>Figure 1: Website Architecture</strong>
+            <img src="/images/Figure1.png" alt="Website architecture and client-server data flow">
+            <div class="caption">Figure 1: Website architecture and client-server data flow<sup>[9]</sup>.</div>
+        </div>
+
+        <!-- ============ 3. Game Design ============ -->
+        <h2>3. Game Design</h2>
+        <p>
+            <strong>Game Rules and Scoring:</strong> Players take turns placing blocks on a 4×4 grid. Each block has one of four shapes and four colors, creating 16 unique types. Placing a block triggers line checks in four directions; matches of three or more (by shape or color) are cleared for 1 point each. A full board triggers a jackpot, clearing all blocks for 16 bonus points. Players are eliminated by 60-second timeout or disconnection; the game ends when all players leave.
+        </p>
+        <p>
+            <strong>Data Structure:</strong> The board uses a 16-element one-dimensional array, with <code>row * 4 + col</code> mapping 2D coordinates to indices. Each cell stores a block object <code>{id, shape, color}</code> or <code>null</code> if empty. The <code>availableBlocks</code> array manages the block pool for random selection during gameplay.
+        </p>
+        <p>
+            <strong>Player Management:</strong> The <code>players</code> array stores player objects with <code>{id, name, score, currentBlock}</code>. <code>currentPlayerIndex</code> cycles turns using modular arithmetic <code>(currentPlayerIndex + 1) % players.length</code>. A 60-second <code>turnTimeout</code> triggers <code>removePlayer</code> on expiration, returning the unplaced block to the pool and advancing to the next player. Join/leave events dynamically update the player array and recalculate turn order.
+        </p>
+
+        <div class="figure">
+            <strong>Figure 2: Socket.IO Multiplayer Management</strong>
             <pre>
 ┌─────────────────────────────────────────────────────────┐
-│                     Website (port 8080)                  │
+│ Client → Server         │ Server → All Clients         │
 ├─────────────────────────────────────────────────────────┤
-│  ┌─────────┐    ┌─────────┐    ┌─────────┐             │
-│  │   /     │    │ /about  │    │  /game  │             │
-│  │ Home    │    │ About   │    │  Game   │             │
-│  │ Page    │    │  Page   │    │  Page   │             │
-│  └────┬────┘    └────┬────┘    └────┬────┘             │
-│       │              │              │                   │
-│       └──────────────┼──────────────┘                   │
-│                      │                                  │
-│              ┌───────┴───────┐                          │
-│              │  Navigation   │                          │
-│              │  (EJS/HTML)   │                          │
-│              └───────────────┘                          │
+│ "joinGame"              │ "gameStateUpdate" (full state) │
+│ "placeBlock"            │ "playerJoined" / "playerLeft" │
+│ "disconnect"            │ "turnChange" (active player)  │
+│                         │ "yourTurn" (direct to player) │
 └─────────────────────────────────────────────────────────┘
             </pre>
-            <div class="caption">Figure 1: High-level website architecture showing three pages with shared navigation.</div>
+            <div class="caption">Figure 2: Socket.IO<sup>[1]</sup> multiplayer management showing client-server communication and player state synchronization.</div>
         </div>
 
-        <h3>2.2 Technology Stack</h3>
-        <p>
-            The application uses a modern web technology stack optimized for real-time multiplayer functionality:
-        </p>
-        <p>
-            <strong>Node.js</strong> was chosen as the runtime environment for its non-blocking I/O model, 
-            which is ideal for handling multiple concurrent Socket.IO connections efficiently. 
-            <strong>Express.js</strong> provides a lightweight framework for routing and serving static files, 
-            simplifying the setup of HTTP endpoints for the three pages. 
-            <strong>Socket.IO</strong> enables real-time bidirectional communication between clients and server, 
-            essential for implementing turn-based multiplayer gameplay with instant state updates. 
-            <strong>EJS</strong> templating allows dynamic rendering of HTML pages with embedded JavaScript, 
-            facilitating the creation of reusable components like the navigation bar. 
-            <strong>HTML5 and CSS3</strong> provide the frontend structure and styling, 
-            with CSS3 features like flexbox and animations enhancing the user interface.
-        </p>
-        
-        <table>
-            <tr><th>Technology</th><th>Purpose</th></tr>
-            <tr><td>Node.js v24.13.0</td><td>Server-side JavaScript runtime</td></tr>
-            <tr><td>Express.js</td><td>Web framework for routing and middleware</td></tr>
-            <tr><td>Socket.IO</td><td>Real-time bidirectional communication</td></tr>
-            <tr><td>EJS</td><td>Template engine for dynamic HTML pages</td></tr>
-            <tr><td>HTML5 / CSS3</td><td>Frontend structure and styling</td></tr>
-        </table>
-
-        <!-- ============ 3. 游戏应用设计 ============ -->
-        <h2>3. Game Design</h2>
-        
-        <h3>3.1 Game Rules and Mechanics</h3>
-        <p>
-            The puzzle game is played on a 4×4 grid with 16 unique blocks, each defined by one of four shapes (circle, square, triangle, diamond) and one of four colors (red, blue, green, yellow). Players take turns drawing a random block from the available pool and placing it on the grid. 
-        </p>
-        <p>
-            When a player places a block, the line-clearing algorithm checks for three or more consecutive matching blocks (by shape or color) in horizontal, vertical, or diagonal directions. Matching lines are cleared, and the player scores points equal to the number of blocks cleared. If all 16 blocks are placed without completing any lines, the player with the highest score wins. A jackpot mechanism rewards players who clear multiple lines simultaneously with bonus points. Each turn has a 60-second timeout to prevent players from stalling the game.
-        </p>
-
-        <h3>3.2 Authoritative Server Architecture</h3>
-        <p>
-            All game logic is implemented server-side in <code>gameLogic.js</code> following the authoritative server pattern. 
-            This design ensures the server maintains the single source of truth for the game state, preventing clients from 
-            tampering with game data or implementing cheating mechanisms. 
-        </p>
-        <p>
-            <strong>Security Implications:</strong> By keeping game logic server-side, clients cannot modify critical 
-            data such as scores, block positions, or turn order. All client actions (placing blocks) are validated by 
-            the server before being processed, ensuring only valid moves are accepted.
-        </p>
-        <p>
-            <strong>Multiplayer Consistency:</strong> The authoritative server guarantees that all players see the same 
-            game state at any given time. When a player places a block, the server processes the request, updates the 
-            state, and broadcasts changes to all connected clients. This eliminates synchronization issues that would 
-            arise if each client maintained its own state.
-        </p>
-        
-        <div class="code-block">
-            // Example: Server-side game state (cannot be tampered by clients)
-            let gameState = {
-                board: Array(16).fill(null),      // Single source of truth
-                players: [],                       // All player data
-                availableBlocks: [],               // Block pool
-                currentPlayerIndex: -1             // Turn management
-            };
-        </div>
-
-        <h3>3.3 Key Algorithms</h3>
-        
-        <h4>Line-Clearing Algorithm</h4>
-        <p>
-            The line-clearing algorithm detects three or more consecutive blocks with matching shape or color by searching in eight directions from the placed block position. The algorithm uses four direction vectors: horizontal (left/right), vertical (up/down), and two diagonals. For each direction pair, it extends outwards from the placed block, collecting indices of matching blocks until a mismatch is encountered. 
-        </p>
-        <p>
-            A Set data structure is used to collect all matching block indices, automatically eliminating duplicates when a block belongs to multiple intersecting lines. After identifying all matches, the algorithm removes those blocks from the grid, shifts remaining blocks down (if applicable), and calculates the player's score based on the number of blocks cleared.
-        </p>
-        
-        <h4>Turn Management and Timeout</h4>
-        <p>
-            The server manages turns using a round-robin approach, cycling through connected players in the order they joined. Each turn has a 60-second timeout implemented with JavaScript's <code>setTimeout</code>. When a timeout occurs, the server skips the current player's turn, removes their assigned block from the available pool, and moves to the next player. 
-        </p>
-        <p>
-            Proper cleanup is implemented using <code>clearTimeout</code> when a player disconnects or the game ends, preventing orphaned timeout callbacks. If all players disconnect, the game state is reset for future players.
-        </p>
-
-        <!-- ============ 4. 客户端-服务器通信 ============ -->
+        <!-- ============ 4. Client-Server Communication ============ -->
         <h2>4. Client-Server Communication</h2>
-        
-        <h3>4.1 Socket.IO Architecture</h3>
         <p>
-            Socket.IO enables real-time multiplayer functionality by establishing persistent WebSocket connections between clients and server. This architecture provides instant bidirectional communication, essential for maintaining synchronized game state across all players. 
+            Unlike the website's static pages (<code>/</code> and <code>/about</code>) which use the traditional HTTP request-response pattern, the multiplayer puzzle game requires continuous bidirectional data exchange. Based on WebSocket connections<sup>[6]</sup>, the game uses Socket.IO to implement real-time communication. Architecturally, HTTP routing (responsible for page navigation) is separated from persistent WebSocket connections (responsible for game state synchronization).
         </p>
         <p>
-            <strong>Client-to-Server Events:</strong>
+            When a client establishes a connection, the server immediately sends the complete <code>gameStateUpdate</code>, containing the board array, player list (with scores), and current turn information, ensuring new players receive accurate status regardless of when they join.
         </p>
-        <ul>
-            <li><code>joinGame</code>: Emitted when a player enters the game page with their username</li>
-            <li><code>placeBlock</code>: Sent when a player clicks a grid cell to place their block</li>
-            <li><code>leaveGame</code>: Triggered when a player leaves the game</li>
-        </ul>
         <p>
-            <strong>Server-to-Client Events:</strong>
+            <strong>Client-to-server communication</strong> follows a request-response pattern with explicit event payloads. The <code>joinGame</code> event carries the player's name, while the <code>placeBlock</code> event transmits the selected grid coordinates <code>{row, col}</code>. Before executing game logic, the server validates player identity, turn ownership, and board cell availability. Invalid operations return error messages through the callback mechanism, allowing clients to display appropriate feedback.
         </p>
-        <ul>
-            <li><code>gameStateUpdate</code>: Broadcasts the complete game state (board, players, scores) to all clients</li>
-            <li><code>yourTurn</code>: Informs a specific player it's their turn and sends their assigned block</li>
-            <li><code>boardUpdate</code>: Sends updated grid state after a block placement</li>
-            <li><code>turnChange</code>: Notifies all players when the turn switches to another player</li>
-            <li><code>gameEnd</code>: Announces the game result when all blocks are placed</li>
-        </ul>
         <p>
-            This event-driven architecture is suitable for multiplayer games because it ensures all players receive immediate updates without polling, reducing latency and improving user experience.
+            <strong>Server-to-client communication</strong> uses two patterns: broadcast events sent to all connected clients, and direct events sent only to specific players. Events such as <code>gameStateUpdate</code>, <code>boardUpdate</code>, and <code>turnChange</code> are broadcast via <code>io.emit()</code> to ensure all clients synchronize with the latest state; <code>yourTurn</code> messages are sent privately via <code>io.to(playerId).emit()</code>, ensuring each player receives their assigned block and time limit confidentially.
         </p>
-        
+        <p>
+            Additionally, the server broadcasts a <code>timeUpdate</code> event every second showing remaining turn time, while special events like <code>blocksCleared</code> and <code>jackpot</code> trigger visual animations for dramatic moments. Player lifecycle events (<code>playerJoined</code>, <code>playerLeft</code>) keep the participant list updated in real-time, with the disconnect handler automatically removing inactive players and returning their unplaced blocks to the available pool.
+        </p>
+
         <div class="figure">
-            <strong>Figure 2: Socket.IO Event Flow</strong>
-            <pre>
-┌──────────┐                    ┌──────────┐
-│ Client A │                    │  Server  │
-└────┬─────┘                    └────┬─────┘
-     │                               │
-     │  "joinGame" (playerName)      │
-     │──────────────────────────────>│
-     │                               │
-     │                    "gameStateUpdate"
-     │<──────────────────────────────│
-     │                               │
-     │          "yourTurn" (block)   │
-     │<──────────────────────────────│
-     │                               │
-     │  "placeBlock" (row, col)      │
-     │──────────────────────────────>│
-     │                               │
-     │                    "boardUpdate"
-     │<──────────────────────────────│
-     │                     "turnChange"
-     │<──────────────────────────────│
-     │                               │
-┌──────────┐                    ┌──────────┐
-│ Client B │                    │  Server  │
-└────┬─────┘                    └────┬─────┘
-     │                               │
-     │                    "gameStateUpdate"
-     │<──────────────────────────────│
-     │                     "turnChange"
-     │<──────────────────────────────│
-            </pre>
-            <div class="caption">Figure 2: Sequence diagram showing Socket.IO event flow between clients and server.</div>
+            <img src="/images/Figure3.png" alt="Socket.IO event flow between clients and server">
+            <div class="caption">Figure 3: Sequence diagram showing Socket.IO event flow between clients and server<sup>[9]</sup>.</div>
         </div>
 
-        <!-- ============ 5. 技术挑战与反思 ============ -->
+        <!-- ============ 5. Challenges & Lessons ============ -->
         <h2>5. Challenges & Lessons</h2>
-        
-        <h3>5.1 Technical Challenges</h3>
-        
-        <h4>Challenge 1: Line-Clearing Algorithm Complexity</h4>
         <p>
-            Implementing the line-clearing logic was challenging due to the need to check all four directions (horizontal, vertical, and two diagonals) for both shape and color matches. The complexity increased when handling cases where multiple lines intersect at the same block, potentially causing duplicate removals or incorrect scoring.
+            <strong>Multiplayer State Synchronization.</strong> Concurrent player actions generate Socket.IO events reaching clients in varying orders, causing desynchronized boards and player lists. New players joining mid-game may miss events and get inconsistent state. The solution always broadcasts complete <code>gameStateUpdate</code> after any state change, ensuring all clients converge regardless of event order. For turn timeouts, the 60-second timer must clear itself, remove the player, return blocks, advance turns, and notify clients—embedding this directly created fragile code, so a <code>setOnPlayerRemovedCallback</code> pattern decouples logic and centralizes side effects. When line clearing returns blocks to the pool, duplicates could corrupt it, so each block is validated with <code>some()</code> before insertion to maintain integrity.
         </p>
         <p>
-            <strong>Solution:</strong> I implemented a directional search approach that extends from the placed block position in positive and negative directions for each axis. The algorithm collects matching block indices using a Set data structure, which automatically handles duplicates. After identifying all matches, the Set is converted to an array, and blocks are removed from the grid simultaneously. This ensures each block is only counted once, even if it belongs to multiple lines.
-        </p>
-        
-        <h4>Challenge 2: Multiplayer State Synchronization</h4>
-        <p>
-            Ensuring all players see the same game state in real-time was particularly challenging when players joined or left mid-game. Initial attempts resulted in desynchronization, where new players would see an incomplete board or incorrect turn information.
+            <strong>UI Design and CSS Refinement.</strong> For UI design, this is not a code problem but rather an aesthetic challenge. I drew reference from other excellent personal websites<sup>[7]</sup> to achieve a clean and visually appealing page. However, integrating multiple strong visual designs introduces alignment issues and color inconsistency that require careful adjustment. Browser developer tools were used extensively for fine-tuning spacing, font sizes, and color values in real time. AI large language models<sup>[8]</sup> also employed to help identify and eliminate style redundancy and inconsistency, ensuring the final stylesheet remained clean and maintainable.
         </p>
         <p>
-            <strong>Solution:</strong> I adopted the authoritative server pattern, where all game logic runs exclusively on the server. When a new player connects, the server immediately sends the complete current game state via the <code>gameStateUpdate</code> event. After every action (block placement, line clearing, turn change), the server broadcasts updates to all connected clients, ensuring everyone stays synchronized.
-        </p>
-        
-        <h4>Challenge 3: Timeout Management with Dynamic Player List</h4>
-        <p>
-            Managing 60-second timeouts became complicated when players dynamically joined or left the game. The initial implementation had issues with orphaned timeout callbacks and incorrect turn progression when a player disconnected during their turn.
-        </p>
-        <p>
-            <strong>Solution:</strong> I implemented robust timeout management using JavaScript's <code>setTimeout</code> with corresponding <code>clearTimeout</code> calls for cleanup. When a player disconnects, any pending timeout for their turn is immediately cleared. The server then recalculates the turn order and starts a new timeout for the next player. This prevents orphaned callbacks from firing and ensures smooth turn progression regardless of player changes.
+            The development process reinforced three key principles. First, multiplayer systems should prefer full-state snapshots over incremental updates to avoid synchronization drift. Second, side-effect-heavy operations benefit from centralized callback patterns that prevent logic from scattering across unrelated code paths. Third, good UI design requires iterative reference and testing, and CSS architecture must be flexible enough to handle diverse rendering environments without excessive duplication.
         </p>
 
-        <h3>5.2 Lessons Learned</h3>
-        <p>
-            Developing this multiplayer puzzle game provided valuable insights into real-time web application development:
-        </p>
-        <ul>
-            <li><strong>Real-time Communication:</strong> I gained hands-on experience with Socket.IO and WebSockets, learning how to establish persistent connections and implement event-driven communication between clients and server.</li>
-            <li><strong>Server-Side Logic:</strong> Implementing game logic server-side taught me the importance of the authoritative server pattern for ensuring security and consistency in multiplayer applications.</li>
-            <li><strong>Turn-Based Architecture:</strong> I learned how to manage turn-based gameplay with proper state synchronization, timeout handling, and player management.</li>
-            <li><strong>Debugging Techniques:</strong> Debugging real-time applications required using server logs and client-side console tools to trace event flows and identify synchronization issues.</li>
-            <li><strong>Modular Code Organization:</strong> Separating game logic into <code>gameLogic.js</code> improved code maintainability and allowed for easier testing and updates.</li>
-        </ul>
-        
-        <h3>5.3 Future Improvements</h3>
-        <p>
-            Given more time, several enhancements could be made to improve the application:
-        </p>
-        <ul>
-            <li><strong>Player Chat System:</strong> Add a real-time chat feature to enhance player interaction.</li>
-            <li><strong>Animation Effects:</strong> Implement smooth animations for block placement, line clearing, and score updates to improve visual feedback.</li>
-            <li><strong>High Score Persistence:</strong> Store high scores in a database (e.g., MongoDB) to maintain leaderboards across game sessions.</li>
-            <li><strong>Spectator Mode:</strong> Allow users to watch ongoing games without participating.</li>
-            <li><strong>Mobile Optimization:</strong> Further optimize the game interface for touch devices with larger tap targets and responsive layouts.</li>
-        </ul>
-
-        <!-- ============ 6. 引用 ============ -->
+        <!-- ============ 6. References ============ -->
         <h2>6. References</h2>
         <ul class="ref-list">
             <li>[1] Socket.IO Documentation. "Socket.IO - Official Documentation." Available at: https://socket.io/docs/ (Accessed: May 2026)</li>
             <li>[2] Express.js Documentation. "Express - Node.js web application framework." Available at: https://expressjs.com/ (Accessed: May 2026)</li>
-            <li>[3] MDN Web Docs. "HTML5: The HyperText Markup Language." Available at: https://developer.mozilla.org/en-US/docs/Web/HTML (Accessed: May 2026)</li>
-            <li>[4] Node.js Documentation. "Node.js v24.13.0 Documentation." Available at: https://nodejs.org/docs/ (Accessed: May 2026)</li>
-            <li>[5] W3Schools. "CSS Tutorial." Available at: https://www.w3schools.com/css/ (Accessed: May 2026)</li>
-            <li>[6] DeepSeek. (2025). DeepSeek [Large language model]. Used for fixing one CSS class name addition error in the code, specifically the issue where classList.add() cannot handle strings containing spaces.</li>
+            <li>[3] Node.js Documentation. "Node.js v24.13.0 Documentation." Available at: https://nodejs.org/docs/ (Accessed: May 2026)</li>
+            <li>[4] W3Schools. "CSS Tutorial." Available at: https://www.w3schools.com/css/ (Accessed: May 2026)</li>
+            <li>[5] EJS Documentation. "EJS - Embedded JavaScript templating." Available at: https://ejs.co/ (Accessed: May 2026)</li>
+            <li>[6] MDN Web Docs. "WebSocket API." Available at: https://developer.mozilla.org/en-US/docs/Web/API/WebSocket (Accessed: May 2026)</li>
+            <li>[7] 桉拾七仔. (2024). "[网站搭建] 仅用了十分钟，完成属于自己的个人网站!" Bilibili. Available at: https://www.bilibili.com/video/BV1WC411a73A/ (Accessed: May 2026)</li>
+            <li>[8] DeepSeek. (2025). DeepSeek [Large language model]. Used for helping identify and eliminate style redundancy and inconsistency, ensuring the final stylesheet remained clean and maintainable.</li>
+            <li>[9] OpenAI. (2025). ChatGPT Image Generation Tool [AI image generation]. Used for generating visual representations of architecture diagrams and sequence diagrams based on hand-drawn sketches and structural descriptions.</li>
         </ul>
 
         <footer>
