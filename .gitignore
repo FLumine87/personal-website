@@ -1,0 +1,20 @@
+# Operating system artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (no longer used — site is static, kept for safety)
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Build / temp
+dist/
+.tmp/
+*.log

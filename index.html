@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - My Personal Website</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="home-page">
+    <button id="theme-toggle" class="theme-toggle fixed-position" aria-label="Toggle dark/light theme">
+        <img class="theme-icon sun-icon" src="images/sun.svg" alt="Light mode" width="20" height="20">
+        <img class="theme-icon moon-icon" src="images/moon.svg" alt="Dark mode" width="20" height="20">
+    </button>
+
+    <main>
+        <div class="hero-section">
+            <h1>Welcome to My Personal Website</h1>
+            <p class="hero-subtitle">Developer, robotics enthusiast, and builder of things</p>
+            <div class="hero-nav">
+                <a href="about.html" class="btn btn-primary">About Me</a>
+                <a href="game.html" class="btn btn-secondary">Play Game</a>
+            </div>
+        </div>
+        
+        <div class="container">
+            <section>
+                <h2>About Me</h2>
+                <p>Hello! I'm FLumine, a developer with a strong interest in computer vision, embedded AI, and web engineering.</p>
+                <p>This website is a personal project of mine. It showcases my work in HTML5, CSS3, and JavaScript, and it is fully static, so it runs anywhere without a server.</p>
+                <p>The site features a personal introduction, an about page highlighting my interests, and a browser based puzzle game.</p>
+
+                <h3>Quick Facts</h3>
+                <ul>
+                    <li>🎓 Focus: Computing Science</li>
+                    <li>💻 Interested in: Web Dev, Vision Alg Dev, AI</li>
+                    <li>🎮 Hobbies: Coding, Photography, Sleeping</li>
+                </ul>
+                <div class="mt-2">
+                    <a href="game.html" class="btn">Play the Game →</a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 FLumine</p>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Check localStorage first, default to light theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // Toggle theme on button click
+            themeToggle?.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeToggle);
+        } else {
+            initThemeToggle();
+        }
+    </script>
+</body>
+</html>

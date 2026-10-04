@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - My Personal Website</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>More About Me</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="game.html">Game</a></li>
+                </ul>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <img class="theme-icon sun-icon" src="images/sun.svg" alt="Light mode" width="20" height="20">
+                <img class="theme-icon moon-icon" src="images/moon.svg" alt="Dark mode" width="20" height="20">
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="full-width-section">
+            <section>
+                <img src="images/head.jpg" alt="My Avatar" class="avatar">
+                <div class="content">
+                    <h2>My Focus Area</h2>
+                    <p>I am particularly interested in real time computer vision systems and embedded AI applications, especially in competitive robotics environments where every millisecond matters. Outside of work, I enjoy outdoor landscapes and photography.</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="two-column">
+            <div class="left-column">
+                <section>
+                    <h3>Courses I Have Taken</h3>
+                    <ul>
+                        <li>Data Structures and Algorithms</li>
+                        <li>Introduction to Software Engineering</li>
+                        <li>Introduction to Data Structures</li>
+                        <li>Object Oriented Programming</li>
+                        <li>Fundamentals of Machine Learning</li>
+                    </ul>
+
+                    <h3>Technical Skills</h3>
+                    <p>I work mainly with C++, Python, and JavaScript. I have experience with OpenCV, Node.js, Vue.js, MySQL, and tools like Git, Linux, Docker, and ROS2.</p>
+                </section>
+
+                <section>
+                    <h3>My Experience in RoboMaster</h3>
+                    <p>I currently lead the algorithm team for a RoboMaster VANGUARD team. When I first joined, I had no idea how much pressure and excitement robotics competitions could bring.</p>
+                    <div class="image-with-text">
+                        <div class="text-content">
+                            <p>One of the biggest challenges I faced was the communication between our vision system and navigation system. In the previous season, they kept conflicting. Coordinate frames did not match, and the system often froze under heavy load. I decided to rebuild the communication SDK from scratch. It took weeks of debugging and late nights, but when it finally worked, our sentry robot performed better than ever. That season, we won 5th place in the Southern Region single armour category. Seeing our robot track and hit targets reliably made all the hard work feel worthwhile.</p>
+                            <p>Staying up until dawn was not always painful. The sunrises over the quiet campus, with empty streets and the faint smell of soldering iron still in the air, became oddly memorable. Watching the sky turn from dark blue to pale orange while the last bug finally disappeared from the log made the exhaustion feel like a small price to pay.</p>
+                        </div>
+                        <div class="image-content">
+                            <img src="images/sunrise.jpg" alt="Sunrise over campus" class="sunrise-image">
+                        </div>
+                    </div>
+                    <p>RoboMaster has been more than just a competition for me. It is where I learned how to turn theory into reality, how to fail and fix things quickly, and how to grow as both an engineer and a leader.</p>
+
+                    <h3>What I Want to Learn Next</h3>
+                    <p>Currently, end-to-end vision systems built on CNN are becoming the new wave. Combining this with multi-dimensional perception modules such as radar and autonomous decision-making for navigation is not only the direction of the industry but also my next goal.</p>
+                </section>
+            </div>
+
+            <aside>
+                <h3>Beyond Academics</h3>
+                <p>When I'm not coding, you can find me:</p>
+                <ul>
+                    <li>🥾 Hiking in Baiyun Mountain</li>
+                    <li>📸 Taking landscape photos while hiking</li>
+                    <li>😴 Sleeping in bed</li>
+                    <li>🚶‍♂️ Traveling in Teyvat</li>
+                </ul>
+                <h3>Memories & Records</h3>
+                <div class="photo-album" onclick="changePhoto()">
+                    <img src="images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image">
+                </div>
+                <p class="album-hint">👆 Click to explore</p>
+            </aside>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 FLumine</p>
+    </footer>
+
+    <script>
+        // Photo album functionality
+        let currentPhotoIndex = 0;
+        const photos = [
+            'images/00cb880efb06e3744df38a1a6097b7e.jpg',
+            'images/f3c180aa596f4b2498795914aa761f0.jpg',
+            'images/TX1_0065.jpg',
+            'images/d6a21a7f70d1f281cf5760722d0aa77.jpg',
+            'images/WU1_1798.jpg',
+        ];
+        
+        function changePhoto() {
+            currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+            const imageElement = document.getElementById('album-image');
+            const indicatorElement = document.getElementById('photo-indicator');
+            
+            if (imageElement) {
+                imageElement.src = photos[currentPhotoIndex];
+            }
+            if (indicatorElement) {
+                indicatorElement.textContent = `${currentPhotoIndex + 1}/${photos.length}`;
+            }
+        }
+        
+        // Theme toggle functionality
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Check localStorage first, default to light theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // Toggle theme on button click
+            themeToggle?.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeToggle);
+        } else {
+            initThemeToggle();
+        }
+    </script>
+</body>
+</html>

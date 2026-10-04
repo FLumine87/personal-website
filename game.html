@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Game - Block Puzzle</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Puzzle Game</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="game.html">Game</a></li>
+                </ul>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <img class="theme-icon sun-icon" src="images/sun.svg" alt="Light mode" width="20" height="20">
+                <img class="theme-icon moon-icon" src="images/moon.svg" alt="Dark mode" width="20" height="20">
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="game-layout">
+            <div class="game-info-container">
+                <div class="game-info">
+                    <div class="current-turn" id="current-turn">
+                        <strong>Current Turn:</strong> <span id="turn-player">Waiting...</span>
+                        <div id="timer-display" class="timer-display"></div>
+                    </div>
+
+                    <div class="current-block" id="current-block-area">
+                        <strong>Current Block:</strong>
+                        <div class="block-preview" id="block-preview">
+                            ?
+                        </div>
+                        <small>Click on an empty cell to place</small>
+                    </div>
+
+                    <div class="player-list">
+                        <h2 style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;">Game Information</h2>
+                        <h3>👥 Players &amp; Scores</h3>
+                        <ul id="player-scores">
+                            <li>No players yet</li>
+                        </ul>
+                    </div>
+
+                    <div class="scoreboard">
+                        <h3>🏆 Current Player's Score</h3>
+                        <div id="your-score" style="font-size: 2rem; font-weight: bold; text-align: center;">0</div>
+                    </div>
+
+                    <div id="message-area" class="status-message">
+                        Two players, one keyboard. Enter both names to start.
+                    </div>
+
+                    <div class="timeout-buttons">
+                        <button id="restart-btn" class="btn">🔄 New Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-board-container">
+                <div id="game-container">
+                    <div class="game-board" id="game-board">
+                        <div style="text-align: center; padding: 50px;">Loading game board...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 FLumine</p>
+    </footer>
+
+    <script src="js/gameLogic.js"></script>
+    <script>
+        // game_vars
+        let currentBoard = Array(16).fill(null);
+        let currentPlayerBlock = null;
+        let activePlayerId = null;
+        let players = [];
+
+        // dom_elems
+        const gameBoardEl = document.getElementById('game-board');
+        const turnPlayerEl = document.getElementById('turn-player');
+        const blockPreviewEl = document.getElementById('block-preview');
+        const playerScoresEl = document.getElementById('player-scores');
+        const yourScoreEl = document.getElementById('your-score');
+        const messageArea = document.getElementById('message-area');
+
+        // utils
+
+        function updateTimerDisplay(timeRemaining) {
+            const timerEl = document.getElementById('timer-display');
+            if (!timerEl) return;
+
+            if (timeRemaining > 0) {
+                timerEl.textContent = `Time Left: ${timeRemaining}s`;
+                timerEl.style.display = 'block';
+                if (timeRemaining <= 10) {
+                    timerEl.style.color = '#e74c3c';
+                    timerEl.style.fontWeight = 'bold';
+                } else {
+                    timerEl.style.color = '#2ecc71';
+                    timerEl.style.fontWeight = 'normal';
+                }
+            } else {
+                timerEl.style.display = 'none';
+            }
+        }
+
+        function showMessage(msg, isError = false) {
+            if (!messageArea) return;
+            messageArea.textContent = msg;
+            messageArea.style.background = isError ? '#f8d7da' : '#d4edda';
+            messageArea.style.color = isError ? '#721c24' : '#155724';
+            messageArea.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
+            setTimeout(() => {
+                if (messageArea && messageArea.textContent === msg) {
+                    messageArea.style.background = '#fff3cd';
+                    messageArea.style.color = '#856404';
+                    messageArea.style.borderColor = '#ffc107';
+                }
+            }, 3000);
+        }
+
+        function getBlockSymbol(shape) {
+            const symbols = {
+                circle: '●',
+                square: '■',
+                triangle: '▲',
+                star: '★'
+            };
+            return symbols[shape] || '?';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // render
+
+        function renderBoard() {
+            if (!gameBoardEl) {
+                console.error('gameBoardEl not found');
+                return;
+            }
+
+            gameBoardEl.innerHTML = '';
+
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                const block = currentBoard[i];
+                const row = Math.floor(i / 4);
+                const col = i % 4;
+
+                cell.className = 'game-cell';
+
+                if (block) {
+                    cell.classList.add('occupied');
+                    cell.classList.add(`block-shape-${block.shape}`, `block-color-${block.color}`);
+                    cell.textContent = getBlockSymbol(block.shape);
+                } else {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                }
+
+                cell.addEventListener('click', (function(r, c) {
+                    return function() {
+                        handleCellClick(r, c);
+                    };
+                })(row, col));
+
+                gameBoardEl.appendChild(cell);
+            }
+        }
+
+        function updatePlayersAndScores(playersList) {
+            players = playersList || [];
+
+            if (!playerScoresEl) return;
+
+            if (players.length === 0) {
+                playerScoresEl.innerHTML = '<li>No players yet</li>';
+                if (yourScoreEl) yourScoreEl.textContent = '0';
+                return;
+            }
+
+            playerScoresEl.innerHTML = players.map(p => `
+                <li class="${p.id === activePlayerId ? 'current-player' : ''}">
+                    <span>${escapeHtml(p.name)} ${p.id === activePlayerId ? '⬅ turn' : ''}</span>
+                    <span style="font-weight: bold;">${p.score} pts</span>
+                </li>
+            `).join('');
+
+            const active = players.find(p => p.id === activePlayerId);
+            if (active && yourScoreEl) {
+                yourScoreEl.textContent = active.score;
+            }
+        }
+
+        function updateCurrentTurn(currentPlayer) {
+            if (!currentPlayer) {
+                if (turnPlayerEl) turnPlayerEl.textContent = 'Waiting for players...';
+                activePlayerId = null;
+                currentPlayerBlock = null;
+                updateBlockPreview(null);
+                return;
+            }
+
+            activePlayerId = currentPlayer.id;
+            if (turnPlayerEl) turnPlayerEl.textContent = currentPlayer.name;
+
+            currentPlayerBlock = GameLogic.getPlayerCurrentBlock(activePlayerId);
+            updateBlockPreview(currentPlayerBlock);
+
+            updatePlayersAndScores(GameLogic.getBoardAndScores().scores);
+        }
+
+        function updateBlockPreview(block) {
+            if (!blockPreviewEl) return;
+
+            if (!block) {
+                blockPreviewEl.innerHTML = '?';
+                blockPreviewEl.className = 'block-preview';
+                return;
+            }
+
+            blockPreviewEl.innerHTML = getBlockSymbol(block.shape);
+            blockPreviewEl.className = `block-preview block-shape-${block.shape} block-color-${block.color}`;
+        }
+
+        function highlightClearedBlocks(indices) {
+            if (!gameBoardEl) return;
+            const cells = gameBoardEl.querySelectorAll('.game-cell');
+            indices.forEach(idx => {
+                if (cells[idx]) {
+                    cells[idx].style.transform = 'scale(0.8)';
+                    cells[idx].style.opacity = '0.5';
+                    setTimeout(() => {
+                        if (cells[idx]) {
+                            cells[idx].style.transform = '';
+                            cells[idx].style.opacity = '';
+                        }
+                    }, 300);
+                }
+            });
+        }
+
+        // game_flow
+
+        function refreshFromState() {
+            const state = GameLogic.getGameState();
+            currentBoard = state.board;
+            renderBoard();
+            updatePlayersAndScores(state.players);
+            updateCurrentTurn(state.currentPlayer);
+            updateTimerDisplay(state.timeRemaining);
+        }
+
+        function handleCellClick(row, col) {
+            if (!activePlayerId) {
+                showMessage('Enter both player names to start.', true);
+                return;
+            }
+
+            if (!currentPlayerBlock) {
+                showMessage('No block to place right now.', true);
+                return;
+            }
+
+            const boardIndex = row * 4 + col;
+            if (currentBoard[boardIndex] !== null) {
+                showMessage('Position already occupied!', true);
+                return;
+            }
+
+            // keep track of who played: the placement already hands the turn on
+            const playerWhoMoved = activePlayerId;
+            const result = GameLogic.executePlacement(playerWhoMoved, row, col);
+
+            if (!result.success) {
+                showMessage(result.error, true);
+                return;
+            }
+
+            refreshFromState();
+
+            if (result.clearedIndices && result.clearedIndices.length > 0) {
+                highlightClearedBlocks(result.clearedIndices);
+            }
+
+            if (result.jackpot) {
+                showMessage('🎉 JACKPOT! Board cleared, +16 points! 🎉');
+            } else if (result.pointsEarned > 0) {
+                showMessage(`+${result.pointsEarned} points from clearing!`);
+            } else if (result.nextPlayer) {
+                showMessage(`${result.nextPlayer.name}'s turn.`);
+            }
+
+            // the turn has already moved on, so show the score of the player
+            // who just scored rather than the next player's
+            if (result.pointsEarned > 0) {
+                const mover = GameLogic.getBoardAndScores().scores
+                    .find(p => p.id === playerWhoMoved);
+                if (mover && yourScoreEl) {
+                    yourScoreEl.textContent = mover.score;
+                }
+            }
+        }
+
+        // local_timers (the countdown is purely local now)
+
+        function startCountdownLoop() {
+            setInterval(() => {
+                updateTimerDisplay(GameLogic.getTimeRemaining());
+            }, 500);
+        }
+
+        // start_dialog
+
+        function showStartDialog() {
+            const existingOverlay = document.querySelector('.overlay');
+            if (existingOverlay) existingOverlay.remove();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+
+            const dialog = document.createElement('div');
+            dialog.className = 'name-dialog';
+            dialog.innerHTML = `
+                <h2>Start a Local Game</h2>
+                <p>Two players, one computer — take turns on the same board.</p>
+                <input type="text" id="player-one-input" placeholder="Player 1 name" maxlength="20" autocomplete="off" value="Player 1">
+                <input type="text" id="player-two-input" placeholder="Player 2 name" maxlength="20" autocomplete="off" value="Player 2">
+                <button id="start-game-btn">Start Game</button>
+            `;
+
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            const inputOne = document.getElementById('player-one-input');
+            const inputTwo = document.getElementById('player-two-input');
+            const startBtn = document.getElementById('start-game-btn');
+
+            function startGame() {
+                const nameOne = inputOne.value.trim() || 'Player 1';
+                const nameTwo = inputTwo.value.trim() || 'Player 2';
+
+                if (nameOne === nameTwo) {
+                    showMessage('Please pick two different names.', true);
+                    return;
+                }
+
+                GameLogic.resetGame();
+
+                const first = GameLogic.addPlayer(nameOne);
+                if (!first.success) {
+                    showMessage(first.error, true);
+                    return;
+                }
+                const second = GameLogic.addPlayer(nameTwo);
+                if (!second.success) {
+                    showMessage(second.error, true);
+                    return;
+                }
+
+                overlay.remove();
+                refreshFromState();
+                showMessage(`${nameOne} starts. Pass the mouse!`);
+                startCountdownLoop();
+            }
+
+            startBtn.onclick = startGame;
+            [inputOne, inputTwo].forEach((input, index) => {
+                input.onkeypress = (e) => {
+                    if (e.key === 'Enter') {
+                        if (index === 0) {
+                            inputTwo.focus();
+                        } else {
+                            startGame();
+                        }
+                    }
+                };
+            });
+
+            inputOne.focus();
+        }
+
+        // theme toggle
+
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            themeToggle?.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+
+        // init
+
+        function init() {
+            initThemeToggle();
+            currentBoard = Array(16).fill(null);
+            renderBoard();
+
+            GameLogic.setOnTimeoutCallback((data) => {
+                refreshFromState();
+                showMessage(`${data.playerName} ran out of time — turn skipped.`);
+            });
+
+            GameLogic.setOnTurnChangeCallback(() => {
+                refreshFromState();
+            });
+
+            document.getElementById('restart-btn').addEventListener('click', () => {
+                GameLogic.resetGame();
+                activePlayerId = null;
+                currentPlayerBlock = null;
+                currentBoard = Array(16).fill(null);
+                renderBoard();
+                updatePlayersAndScores([]);
+                updateBlockPreview(null);
+                updateTimerDisplay(0);
+                showStartDialog();
+            });
+
+            refreshFromState();
+            showStartDialog();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
