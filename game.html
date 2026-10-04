@@ -8,6 +8,14 @@
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const bg = savedTheme === 'dark' ? 'images/dark.webp' : 'images/light.webp';
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = bg;
+            link.type = 'image/webp';
+            document.head.appendChild(link);
         })();
     </script>
     <link rel="stylesheet" href="css/style.css">

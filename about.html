@@ -8,6 +8,14 @@
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const bg = savedTheme === 'dark' ? 'images/dark.webp' : 'images/light.webp';
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = bg;
+            link.type = 'image/webp';
+            document.head.appendChild(link);
         })();
     </script>
     <link rel="stylesheet" href="css/style.css">
@@ -66,7 +74,10 @@
                             <p>Staying up until dawn was not always painful. The sunrises over the quiet campus, with empty streets and the faint smell of soldering iron still in the air, became oddly memorable. Watching the sky turn from dark blue to pale orange while the last bug finally disappeared from the log made the exhaustion feel like a small price to pay.</p>
                         </div>
                         <div class="image-content">
-                            <img src="images/sunrise.jpg" alt="Sunrise over campus" class="sunrise-image">
+                            <picture>
+                                <source srcset="images/sunrise.webp" type="image/webp">
+                                <img src="images/sunrise.jpg" alt="Sunrise over campus" class="sunrise-image" loading="lazy" decoding="async" width="1600" height="2133">
+                            </picture>
                         </div>
                     </div>
                     <p>RoboMaster has been more than just a competition for me. It is where I learned how to turn theory into reality, how to fail and fix things quickly, and how to grow as both an engineer and a leader.</p>
@@ -87,7 +98,10 @@
                 </ul>
                 <h3>Memories & Records</h3>
                 <div class="photo-album" onclick="changePhoto()">
-                    <img src="images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image">
+                    <picture>
+                        <source id="album-source" srcset="images/00cb880efb06e3744df38a1a6097b7e.webp" type="image/webp">
+                        <img src="images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image" decoding="async" width="1600" height="1200">
+                    </picture>
                 </div>
                 <p class="album-hint">👆 Click to explore</p>
             </aside>
@@ -101,21 +115,63 @@
     <script>
         // Photo album functionality
         let currentPhotoIndex = 0;
-        const photos = [
+        // WebP versions are ~2x smaller; browsers without WebP support fall
+        // back to the .jpg files below (see supportsWebp()).
+        const photosWebp = [
+            'images/00cb880efb06e3744df38a1a6097b7e.webp',
+            'images/f3c180aa596f4b2498795914aa761f0.webp',
+            'images/TX1_0065.webp',
+            'images/d6a21a7f70d1f281cf5760722d0aa77.webp',
+            'images/WU1_1798.webp',
+        ];
+        const photosJpg = [
             'images/00cb880efb06e3744df38a1a6097b7e.jpg',
             'images/f3c180aa596f4b2498795914aa761f0.jpg',
             'images/TX1_0065.jpg',
             'images/d6a21a7f70d1f281cf5760722d0aa77.jpg',
             'images/WU1_1798.jpg',
         ];
-        
+
+        function supportsWebp() {
+            try {
+                const c = document.createElement('canvas');
+                if (!c || typeof c.toDataURL !== 'function') return false;
+                return c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+            } catch (e) {
+                // Some environments (or hardened browsers) block canvas export;
+                // fall back to the JPEG versions in that case.
+                return false;
+            }
+        }
+        const photos = supportsWebp() ? photosWebp : photosJpg;
+
+        // Preload the rest of the album once the page is idle, so clicking
+        // through photos is instant without delaying the initial render.
+        function preloadAlbum() {
+            photos.slice(1).forEach(function (src) {
+                const img = new Image();
+                img.src = src;
+            });
+        }
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(preloadAlbum, { timeout: 3000 });
+        } else {
+            window.addEventListener('load', function () { setTimeout(preloadAlbum, 500); });
+        }
+
         function changePhoto() {
             currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
             const imageElement = document.getElementById('album-image');
+            const sourceElement = document.getElementById('album-source');
             const indicatorElement = document.getElementById('photo-indicator');
-            
+
             if (imageElement) {
-                imageElement.src = photos[currentPhotoIndex];
+                // Update both the <source> (WebP) and the <img> (fallback) so
+                // the browser keeps using the smaller WebP when supported.
+                if (sourceElement) {
+                    sourceElement.srcset = photosWebp[currentPhotoIndex];
+                }
+                imageElement.src = photosJpg[currentPhotoIndex];
             }
             if (indicatorElement) {
                 indicatorElement.textContent = `${currentPhotoIndex + 1}/${photos.length}`;

@@ -1,8 +1,14 @@
 /* Theme Variables */
 :root {
-    /* Background image settings */
+    /* Background images.
+       Declared twice on purpose: the plain url() line is the universal
+       fallback, and the image-set() line upgrades capable browsers to the
+       much smaller WebP version. Browsers that don't understand
+       image-set() discard that line and keep the fallback. */
     --bg-image-light: url('../images/light.jpg');
+    --bg-image-light-webp: url('../images/light.webp');
     --bg-image-dark: url('../images/dark.jpg');
+    --bg-image-dark-webp: url('../images/dark.webp');
     
     /* Overlay colors for readability */
     --bg-overlay-light: rgba(255, 255, 255, 0.75);
@@ -59,6 +65,10 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     background-image: var(--bg-image-light);
+    background-image: image-set(
+        var(--bg-image-light-webp) type('image/webp'),
+        var(--bg-image-light) type('image/jpeg')
+    );
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -88,6 +98,10 @@ body::before {
 /* Dark theme background image */
 [data-theme="dark"] body {
     background-image: var(--bg-image-dark);
+    background-image: image-set(
+        var(--bg-image-dark-webp) type('image/webp'),
+        var(--bg-image-dark) type('image/jpeg')
+    );
 }
 
 [data-theme="dark"] body::before {

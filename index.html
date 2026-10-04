@@ -8,6 +8,17 @@
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Preload the background image for the active theme so it starts
+            // downloading immediately instead of waiting for the stylesheet.
+            // WebP is ~10x smaller than the original source image.
+            const bg = savedTheme === 'dark' ? 'images/dark.webp' : 'images/light.webp';
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = bg;
+            link.type = 'image/webp';
+            document.head.appendChild(link);
         })();
     </script>
     <link rel="stylesheet" href="css/style.css">
