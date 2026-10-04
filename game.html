@@ -9,7 +9,10 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
 
-            const bg = savedTheme === 'dark' ? 'images/dark.webp' : 'images/light.webp';
+            // Match the resolution the stylesheet will actually request.
+            const hi = (window.devicePixelRatio || 1) > 1.5;
+            const stem = savedTheme === 'dark' ? 'dark' : 'light';
+            const bg = 'images/' + stem + (hi ? '-2560' : '-1920') + '.webp';
             const link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';

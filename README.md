@@ -18,8 +18,37 @@ step and no server-side runtime. It is served directly by GitHub Pages.
 │   └── style.css     Shared stylesheet
 ├── js/
 │   └── gameLogic.js  Game rules (runs in the browser)
-└── images/           Site assets
+├── tools/
+│   └── build-images.py  Regenerates responsive image tiers
+└── images/           Generated site assets (see below)
 ```
+
+## Images
+
+Every bitmap ships in several widths plus a WebP version, and the markup uses
+`srcset`/`sizes` so a browser downloads only the file it actually needs:
+
+| Asset | Tiers | Typical download |
+|---|---|---|
+| Background (`light`, `dark`) | 1920, 2560 | 85 KB |
+| Avatar (`head`) | 150, 300 | 4.7 KB |
+| Album photos | 320, 640, 960 | 6–20 KB each |
+| Inline photo (`sunrise`) | 320, 640, 1280 | 20 KB |
+
+A 1x display gets the small tier; a 2x display automatically gets the larger one.
+
+### Regenerating
+
+Put full-resolution originals in `images/src/` (git-ignored) and run:
+
+```bash
+python3 tools/build-images.py          # generate all tiers
+python3 tools/build-images.py --check   # report only, write nothing
+python3 tools/build-images.py --force   # rebuild even if up to date
+```
+
+Tier definitions live in the `RULES` dict at the top of the script. After
+changing them, update the matching `srcset`/`sizes` attributes in the HTML.
 
 ## Local preview
 

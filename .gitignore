@@ -18,3 +18,8 @@ package-lock.json
 dist/
 .tmp/
 *.log
+
+# Full-resolution source images (39 MB).
+# These stay local as input for tools/build-images.py; only the generated
+# size tiers under images/ are published.
+images/src/

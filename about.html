@@ -9,7 +9,10 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
 
-            const bg = savedTheme === 'dark' ? 'images/dark.webp' : 'images/light.webp';
+            // Match the resolution the stylesheet will actually request.
+            const hi = (window.devicePixelRatio || 1) > 1.5;
+            const stem = savedTheme === 'dark' ? 'dark' : 'light';
+            const bg = 'images/' + stem + (hi ? '-2560' : '-1920') + '.webp';
             const link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';
@@ -41,7 +44,14 @@
     <main>
         <div class="full-width-section">
             <section>
-                <img src="images/head.jpg" alt="My Avatar" class="avatar">
+                <picture>
+                    <source type="image/webp"
+                            srcset="images/head-150.webp 150w, images/head-300.webp 300w"
+                            sizes="150px">
+                    <img src="images/head.jpg" alt="My Avatar" class="avatar"
+                         srcset="images/head-150.jpg 150w, images/head-300.jpg 300w"
+                         sizes="150px" width="150" height="150" decoding="async">
+                </picture>
                 <div class="content">
                     <h2>My Focus Area</h2>
                     <p>I am particularly interested in real time computer vision systems and embedded AI applications, especially in competitive robotics environments where every millisecond matters. Outside of work, I enjoy outdoor landscapes and photography.</p>
@@ -75,8 +85,13 @@
                         </div>
                         <div class="image-content">
                             <picture>
-                                <source srcset="images/sunrise.webp" type="image/webp">
-                                <img src="images/sunrise.jpg" alt="Sunrise over campus" class="sunrise-image" loading="lazy" decoding="async" width="1600" height="2133">
+                                <source type="image/webp"
+                                        srcset="images/sunrise-320.webp 320w, images/sunrise-640.webp 640w, images/sunrise-1280.webp 1280w"
+                                        sizes="(max-width: 900px) 45vw, 300px">
+                                <img src="images/sunrise.jpg" alt="Sunrise over campus" class="sunrise-image"
+                                     srcset="images/sunrise-320.jpg 320w, images/sunrise-640.jpg 640w, images/sunrise-1280.jpg 1280w"
+                                     sizes="(max-width: 900px) 45vw, 300px"
+                                     loading="lazy" decoding="async" width="1280" height="1706">
                             </picture>
                         </div>
                     </div>
@@ -99,8 +114,13 @@
                 <h3>Memories & Records</h3>
                 <div class="photo-album" onclick="changePhoto()">
                     <picture>
-                        <source id="album-source" srcset="images/00cb880efb06e3744df38a1a6097b7e.webp" type="image/webp">
-                        <img src="images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image" decoding="async" width="1600" height="1200">
+                        <source id="album-source" type="image/webp"
+                                srcset="images/00cb880efb06e3744df38a1a6097b7e-320.webp 320w, images/00cb880efb06e3744df38a1a6097b7e-640.webp 640w, images/00cb880efb06e3744df38a1a6097b7e-960.webp 960w"
+                                sizes="(max-width: 900px) 90vw, 314px">
+                        <img src="images/00cb880efb06e3744df38a1a6097b7e.jpg" alt="My Photos" class="album-image" id="album-image"
+                             srcset="images/00cb880efb06e3744df38a1a6097b7e-320.jpg 320w, images/00cb880efb06e3744df38a1a6097b7e-640.jpg 640w, images/00cb880efb06e3744df38a1a6097b7e-960.jpg 960w"
+                             sizes="(max-width: 900px) 90vw, 314px"
+                             decoding="async" width="960" height="720">
                     </picture>
                 </div>
                 <p class="album-hint">👆 Click to explore</p>
@@ -115,22 +135,27 @@
     <script>
         // Photo album functionality
         let currentPhotoIndex = 0;
-        // WebP versions are ~2x smaller; browsers without WebP support fall
-        // back to the .jpg files below (see supportsWebp()).
-        const photosWebp = [
-            'images/00cb880efb06e3744df38a1a6097b7e.webp',
-            'images/f3c180aa596f4b2498795914aa761f0.webp',
-            'images/TX1_0065.webp',
-            'images/d6a21a7f70d1f281cf5760722d0aa77.webp',
-            'images/WU1_1798.webp',
+
+        // Each album photo ships in three widths. The browser picks the
+        // smallest one that still looks sharp for the current layout and
+        // screen density, so we never download a 1200px file to show 400px.
+        const ALBUM_WIDTHS = [320, 640, 960];
+        const albumStems = [
+            'images/00cb880efb06e3744df38a1a6097b7e',
+            'images/f3c180aa596f4b2498795914aa761f0',
+            'images/TX1_0065',
+            'images/d6a21a7f70d1f281cf5760722d0aa77',
+            'images/WU1_1798',
         ];
-        const photosJpg = [
-            'images/00cb880efb06e3744df38a1a6097b7e.jpg',
-            'images/f3c180aa596f4b2498795914aa761f0.jpg',
-            'images/TX1_0065.jpg',
-            'images/d6a21a7f70d1f281cf5760722d0aa77.jpg',
-            'images/WU1_1798.jpg',
-        ];
+
+        function srcsetFor(stem, ext) {
+            return ALBUM_WIDTHS.map(function (w) {
+                return stem + '-' + w + '.' + ext + ' ' + w + 'w';
+            }).join(', ');
+        }
+
+        const albumWebp = albumStems.map(function (s) { return srcsetFor(s, 'webp'); });
+        const albumJpg  = albumStems.map(function (s) { return srcsetFor(s, 'jpg'); });
 
         function supportsWebp() {
             try {
@@ -143,14 +168,31 @@
                 return false;
             }
         }
-        const photos = supportsWebp() ? photosWebp : photosJpg;
+        // (albumWebp / albumJpg are consumed directly by changePhoto below.)
+
+        // Pick the width the browser is most likely to use right now, so the
+        // idle preload warms the correct file rather than every size.
+        function currentAlbumWidth() {
+            // The album slot measures ~314px on wide layouts and near full
+            // width on narrow ones — mirroring the `sizes` attribute above,
+            // so this estimate matches what the browser will actually request.
+            const vw = window.innerWidth || 1200;
+            const cssPx = vw > 900 ? 314 : vw * 0.90;
+            const needed = cssPx * (window.devicePixelRatio || 1);
+            for (let i = 0; i < ALBUM_WIDTHS.length; i++) {
+                if (ALBUM_WIDTHS[i] >= needed) return ALBUM_WIDTHS[i];
+            }
+            return ALBUM_WIDTHS[ALBUM_WIDTHS.length - 1];
+        }
 
         // Preload the rest of the album once the page is idle, so clicking
         // through photos is instant without delaying the initial render.
         function preloadAlbum() {
-            photos.slice(1).forEach(function (src) {
+            const w = currentAlbumWidth();
+            const ext = supportsWebp() ? 'webp' : 'jpg';
+            albumStems.slice(1).forEach(function (stem) {
                 const img = new Image();
-                img.src = src;
+                img.src = stem + '-' + w + '.' + ext;
             });
         }
         if ('requestIdleCallback' in window) {
@@ -160,21 +202,22 @@
         }
 
         function changePhoto() {
-            currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+            currentPhotoIndex = (currentPhotoIndex + 1) % albumStems.length;
             const imageElement = document.getElementById('album-image');
             const sourceElement = document.getElementById('album-source');
             const indicatorElement = document.getElementById('photo-indicator');
 
             if (imageElement) {
-                // Update both the <source> (WebP) and the <img> (fallback) so
-                // the browser keeps using the smaller WebP when supported.
+                // Swap the whole srcset (not just src) so the browser keeps
+                // choosing the right size for this slide.
                 if (sourceElement) {
-                    sourceElement.srcset = photosWebp[currentPhotoIndex];
+                    sourceElement.srcset = albumWebp[currentPhotoIndex];
                 }
-                imageElement.src = photosJpg[currentPhotoIndex];
+                imageElement.srcset = albumJpg[currentPhotoIndex];
+                imageElement.src = albumStems[currentPhotoIndex] + '-1200.jpg';
             }
             if (indicatorElement) {
-                indicatorElement.textContent = `${currentPhotoIndex + 1}/${photos.length}`;
+                indicatorElement.textContent = `${currentPhotoIndex + 1}/${albumStems.length}`;
             }
         }
         
