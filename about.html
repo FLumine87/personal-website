@@ -30,8 +30,8 @@
             <nav>
                 <ul>
                     <li><a href="index.html">Home</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="game.html">Game</a></li>
+                    <li><a href="about.html" class="active">About</a></li>
+                    <li><a href="blog.html">Blog</a></li>
                 </ul>
             </nav>
             <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
@@ -44,14 +44,23 @@
     <main>
         <div class="full-width-section">
             <section>
-                <picture>
-                    <source type="image/webp"
-                            srcset="images/head-150.webp 150w, images/head-300.webp 300w"
-                            sizes="150px">
-                    <img src="images/head.jpg" alt="My Avatar" class="avatar"
-                         srcset="images/head-150.jpg 150w, images/head-300.jpg 300w"
-                         sizes="150px" width="150" height="150" decoding="async">
-                </picture>
+                <div class="avatar-press" id="avatar-press" role="img"
+                     aria-label="My avatar" title="My avatar">
+                    <picture>
+                        <source type="image/webp"
+                                srcset="images/head-150.webp 150w, images/head-300.webp 300w"
+                                sizes="150px">
+                        <img src="images/head.jpg" alt="" class="avatar"
+                             srcset="images/head-150.jpg 150w, images/head-300.jpg 300w"
+                             sizes="150px" width="150" height="150" decoding="async"
+                             draggable="false">
+                    </picture>
+                    <svg class="press-ring" viewBox="0 0 160 160" aria-hidden="true">
+                        <circle class="press-ring-track" cx="80" cy="80" r="72"></circle>
+                        <circle class="press-ring-fill" id="press-ring-fill" cx="80" cy="80" r="72"></circle>
+                    </svg>
+                    <span class="press-hint" id="press-hint">Keep holding…</span>
+                </div>
                 <div class="content">
                     <h2>My Focus Area</h2>
                     <p>I am particularly interested in real time computer vision systems and embedded AI applications, especially in competitive robotics environments where every millisecond matters. Outside of work, I enjoy outdoor landscapes and photography.</p>
@@ -214,13 +223,87 @@
                     sourceElement.srcset = albumWebp[currentPhotoIndex];
                 }
                 imageElement.srcset = albumJpg[currentPhotoIndex];
-                imageElement.src = albumStems[currentPhotoIndex] + '-1200.jpg';
+                imageElement.src = albumStems[currentPhotoIndex] + '-' +
+                    ALBUM_WIDTHS[ALBUM_WIDTHS.length - 1] + '.jpg';
             }
             if (indicatorElement) {
                 indicatorElement.textContent = `${currentPhotoIndex + 1}/${albumStems.length}`;
             }
         }
-        
+
+        // ── Easter egg: hold the avatar for 5s ─────────────────────────
+        // Press-and-hold (mouse or touch) on the avatar navigates to the
+        // hidden puzzle game. A ring fills up as visual feedback; releasing
+        // early cancels.
+        function initAvatarLongPress() {
+            const trigger = document.getElementById('avatar-press');
+            const ring = document.getElementById('press-ring-fill');
+            const hint = document.getElementById('press-hint');
+            if (!trigger) return;
+
+            const HOLD_MS = 5000;
+            const CIRCUMFERENCE = 452;      // 2 * PI * 72, matches the CSS
+            const TARGET = 'easter-egg.html';
+
+            let rafId = null;
+            let startedAt = 0;
+            let done = false;
+
+            function paint(progress) {
+                if (ring) {
+                    ring.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - progress));
+                }
+                if (hint) {
+                    const left = Math.max(0, Math.ceil((HOLD_MS * (1 - progress)) / 1000));
+                    hint.textContent = 'Keep holding… ' + left + 's';
+                }
+            }
+
+            function tick() {
+                const elapsed = performance.now() - startedAt;
+                const progress = Math.min(1, elapsed / HOLD_MS);
+                paint(progress);
+                if (progress >= 1) {
+                    done = true;
+                    cancel();
+                    window.location.href = TARGET;
+                    return;
+                }
+                rafId = requestAnimationFrame(tick);
+            }
+
+            function start(e) {
+                // Ignore secondary buttons; only the primary press counts.
+                if (e && e.button !== undefined && e.button !== 0) return;
+                if (done) return;
+                startedAt = performance.now();
+                trigger.classList.add('pressing');
+                if (ring) ring.style.strokeDashoffset = String(CIRCUMFERENCE);
+                paint(0);
+                rafId = requestAnimationFrame(tick);
+            }
+
+            function cancel() {
+                if (rafId !== null) {
+                    cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
+                trigger.classList.remove('pressing');
+                if (!done && ring) ring.style.strokeDashoffset = String(CIRCUMFERENCE);
+            }
+
+            trigger.addEventListener('mousedown', start);
+            trigger.addEventListener('touchstart', start, { passive: true });
+            ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(function (evt) {
+                trigger.addEventListener(evt, cancel);
+            });
+
+            // Long-press on mobile otherwise pops the "save image" sheet, and
+            // a right-click menu would interrupt the hold on desktop.
+            trigger.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+            trigger.addEventListener('dragstart', function (e) { e.preventDefault(); });
+        }
+
         // Theme toggle functionality
         function initThemeToggle() {
             const themeToggle = document.getElementById('theme-toggle');
@@ -239,10 +322,15 @@
             });
         }
         
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initThemeToggle);
-        } else {
+        function initPage() {
             initThemeToggle();
+            initAvatarLongPress();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPage);
+        } else {
+            initPage();
         }
     </script>
 </body>

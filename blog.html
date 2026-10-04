@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - My Personal Website</title>
+    <title>Blog - My Personal Website</title>
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
 
-            // Preload the background image for the active theme so it starts
-            // downloading immediately instead of waiting for the stylesheet.
-            // WebP is ~10x smaller than the original source image.
             // Match the resolution the stylesheet will actually request.
             const hi = (window.devicePixelRatio || 1) > 1.5;
             const stem = savedTheme === 'dark' ? 'dark' : 'light';
@@ -26,37 +23,45 @@
     </script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="home-page">
-    <button id="theme-toggle" class="theme-toggle fixed-position" aria-label="Toggle dark/light theme">
-        <img class="theme-icon sun-icon" src="images/sun.svg" alt="Light mode" width="20" height="20">
-        <img class="theme-icon moon-icon" src="images/moon.svg" alt="Dark mode" width="20" height="20">
-    </button>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Blog</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="blog.html" class="active">Blog</a></li>
+                </ul>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <img class="theme-icon sun-icon" src="images/sun.svg" alt="Light mode" width="20" height="20">
+                <img class="theme-icon moon-icon" src="images/moon.svg" alt="Dark mode" width="20" height="20">
+            </button>
+        </div>
+    </header>
 
     <main>
-        <div class="hero-section">
-            <h1>Welcome to My Personal Website</h1>
-            <p class="hero-subtitle">Developer, robotics enthusiast, and builder of things</p>
-            <div class="hero-nav">
-                <a href="about.html" class="btn btn-primary">About Me</a>
-                <a href="blog.html" class="btn btn-secondary">Read the Blog</a>
-            </div>
-        </div>
-        
         <div class="container">
-            <section>
-                <h2>About Me</h2>
-                <p>Hello! I'm FLumine, a developer with a strong interest in computer vision, embedded AI, and web engineering.</p>
-                <p>This website is a personal project of mine. It showcases my work in HTML5, CSS3, and JavaScript, and it is fully static, so it runs anywhere without a server.</p>
-                <p>The site features a personal introduction, an about page highlighting my interests, and a blog where I write about what I'm building.</p>
+            <section class="blog-intro">
+                <h2>Writing</h2>
+                <p>Notes on computer vision, robotics, and whatever else I happen to be building. Longer write-ups, experiments, and the occasional post-mortem.</p>
+            </section>
 
-                <h3>Quick Facts</h3>
-                <ul>
-                    <li>🎓 Focus: Computing Science</li>
-                    <li>💻 Interested in: Web Dev, Vision Alg Dev, AI</li>
-                    <li>🎮 Hobbies: Coding, Photography, Sleeping</li>
-                </ul>
-                <div class="mt-2">
-                    <a href="blog.html" class="btn">Read the Blog →</a>
+            <!--
+                Posts are added here as they are published. Each entry looks like:
+
+                <article class="post-card">
+                    <p class="post-meta"><time datetime="2026-10-04">4 October 2026</time> · <span class="post-tag">Robotics</span></p>
+                    <h3><a href="posts/example.html">Post title</a></h3>
+                    <p>One or two sentences summarising the post.</p>
+                </article>
+            -->
+            <section class="post-list">
+                <div class="empty-state">
+                    <div class="empty-state-mark" aria-hidden="true">✍️</div>
+                    <h3>Nothing published yet</h3>
+                    <p>Posts will show up here as soon as they are written. In the meantime, the <a href="about.html">About</a> page has the longer story.</p>
                 </div>
             </section>
         </div>
@@ -70,21 +75,21 @@
         // Theme toggle functionality
         function initThemeToggle() {
             const themeToggle = document.getElementById('theme-toggle');
-            
+
             // Check localStorage first, default to light theme
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
-            
+
             // Toggle theme on button click
             themeToggle?.addEventListener('click', () => {
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
+
                 document.documentElement.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
             });
         }
-        
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initThemeToggle);
         } else {

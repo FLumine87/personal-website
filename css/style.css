@@ -958,3 +958,178 @@ footer p {
         flex: 1;
     }
 }
+
+/* ── Blog page ─────────────────────────────────────────────────────── */
+
+.blog-intro {
+    margin-bottom: 1.5rem;
+}
+
+.post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.post-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+}
+
+.post-card h3 {
+    margin-top: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-card h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.post-card h3 a:hover {
+    text-decoration: underline;
+}
+
+.post-card p:last-child {
+    margin-bottom: 0;
+}
+
+.post-meta {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    margin: 0;
+}
+
+.post-tag {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(44, 62, 80, 0.1);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+}
+
+[data-theme="dark"] .post-tag {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Empty state — shown while no posts exist yet */
+.empty-state {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state-mark {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+}
+
+.empty-state h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+/* Nav: current page */
+header nav a.active {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+/* ── Avatar long-press (easter egg trigger) ────────────────────────── */
+
+.avatar-press {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Suppress the iOS/Android long-press callout and text selection. */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.avatar-press .avatar {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Ring drawn with SVG so it scales cleanly and needs no images. */
+.press-ring {
+    position: absolute;
+    inset: -8px;
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
+    transform: rotate(-90deg);   /* start the arc at 12 o'clock */
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.avatar-press.pressing .press-ring {
+    opacity: 1;
+}
+
+.press-ring circle {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.press-ring .press-ring-track {
+    stroke: rgba(255, 255, 255, 0.35);
+}
+
+.press-ring .press-ring-fill {
+    stroke: #2ecc71;
+    stroke-dasharray: 452;      /* 2 * PI * r, r = 72 */
+    stroke-dashoffset: 452;     /* fully hidden until the press starts */
+}
+
+/* Hint shown briefly once the press begins */
+.press-hint {
+    position: absolute;
+    left: 50%;
+    bottom: -1.75rem;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.avatar-press.pressing .press-hint {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .press-ring,
+    .press-hint {
+        transition: none;
+    }
+}

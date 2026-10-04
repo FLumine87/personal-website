@@ -13,7 +13,8 @@ step and no server-side runtime. It is served directly by GitHub Pages.
 .
 ├── index.html        Home page
 ├── about.html        About page
-├── game.html         Puzzle game (client-side easter egg)
+├── blog.html         Blog / writing index
+├── easter-egg.html   Puzzle game (hidden — see below)
 ├── css/
 │   └── style.css     Shared stylesheet
 ├── js/
@@ -22,6 +23,13 @@ step and no server-side runtime. It is served directly by GitHub Pages.
 │   └── build-images.py  Regenerates responsive image tiers
 └── images/           Generated site assets (see below)
 ```
+
+## The hidden game
+
+`easter-egg.html` is not linked from the navigation. It is reached by pressing
+and holding the avatar on the About page for five seconds; a ring fills up as
+feedback and releasing early cancels. Right-click and the mobile long-press
+callout are suppressed on that element so the gesture is not interrupted.
 
 ## Images
 
