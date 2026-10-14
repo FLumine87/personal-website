@@ -1,0 +1,27 @@
+# GitHub Pages build configuration.
+#
+# Why this file exists
+# --------------------
+# GitHub Pages serves every file in the publish root by direct URL. That is fine
+# for anything the site needs at runtime (HTML, css/, js/, images/, posts/), but
+# it also means build tooling and figure sources could be fetched by anyone who
+# guesses the path — e.g. /tools/build-post.py or /figs/fig-architecture.svg.
+#
+# Files listed under `exclude` stay in this repository (and remain readable on
+# GitHub), but they are NOT copied into the published site: their URLs return 404.
+# This is obscurity against casual URL probing, not access control — a public
+# repository can always be read through GitHub itself.
+#
+# Runtime cost of this list: none. The figures in figs/ are inlined into the post
+# HTML at build time (tools/build-post.py), so nothing the browser loads is excluded.
+exclude:
+  - README.md
+  - tools
+  - figs
+  - .gitignore
+  # Jekyll's own defaults, restated so that setting `exclude` explicitly cannot
+  # silently drop them.
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
