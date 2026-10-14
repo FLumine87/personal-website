@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>序章：一棵决策树能有多复杂 - FLumine</title>
+    <meta name="description" content="从 RoboMaster 哨兵，到一场游戏里的先行测试">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Blog</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../about.html">About</a></li>
+                    <li><a href="../blog.html" class="active">Blog</a></li>
+                </ul>
+            </nav>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+                <img class="theme-icon sun-icon" src="../images/sun.svg" alt="Light mode" width="20" height="20">
+                <img class="theme-icon moon-icon" src="../images/moon.svg" alt="Dark mode" width="20" height="20">
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <article class="post">
+                <div class="post-header">
+                    <p class="post-meta"><span class="post-series">决策与自动化·序章</span> <time datetime="2026-10-14">14 October 2026</time></p>
+                    <h1>序章：一棵决策树能有多复杂</h1>
+                    <p class="post-subtitle">从 RoboMaster 哨兵，到一场游戏里的先行测试</p>
+                </div>
+                <div class="post-body">
+<blockquote>
+<p>以下都是打完 RM 之后我的一些想法和总结。当时这些想法都没有经过前人论文的提点，纯粹是在比赛里撞出来的；后来也有不少想法被推翻。所以这里只是一篇序章——是这段旅程的起点，不是结论。</p>
+</blockquote>
+<h2>哨兵的天花板，其实写在决策里</h2>
+<p>在 RoboMaster 里，哨兵是少数几个全自动的兵种：没有操作手，没有人替它做判断。它看到什么、打谁、什么时候撤、什么时候浪，全部由代码决定。</p>
+<p>于是问题变得非常朴素：<strong>想让它更强，怎么办？</strong></p>
+<p>答案听起来也很朴素——更复杂的行为树和决策树，以及更强的动态适应性。逻辑写得更细，条件分得更准，对场上变化的反应更快，上限自然就上去了。</p>
+<p>但真动手写过就会知道，这句话里的每一个字都在要钱。</p>
+<h2>传统决策树的两个死穴</h2>
+<p>第一个死穴是<strong>状态空间爆炸</strong>。</p>
+<p>拿哨兵做一个粗略的估算：自身血量 0–100、弹药 0–200、敌方距离分 4 档、敌方血量分 3 档、敌方数量 0–5、基地血量 0–100、比赛剩余时间 0–600 秒、云台温度 0–100。八个参数而已，理论状态数约 <strong>8.96 × 10¹²</strong>（101 × 201 × 4 × 3 × 6 × 101 × 601 × 101）。</p>
+<p>要“覆盖所有情况”，等于要写出接近<strong>九万亿条</strong>分支——这不可能。所以现实中我们只能不停地做同一件事：<strong>把连续的高维状态，硬压成离散的、低维的、人类能穷举的决策表</strong>。压掉的每一分信息，就是决策质量的天花板。</p>
+<figure class="post-figure">
+<svg class="fig fig-state-space" viewBox="0 0 940 640" width="100%" style="max-width:100%;height:auto;display:block" role="img" aria-labelledby="figSSTitle figSSDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="figSSTitle">State-space explosion — 8 parameters are enough</title>
+  <desc id="figSSDesc">A horizontal log-scale bar chart. Eight sentinel input parameters are multiplied in order (HP 101, Ammo 201, Enemy range 4, Enemy HP 3, Enemy count 6, Base HP 101, Time left 601, Gimbal temp 101). The cumulative number of combinations grows from 101 to about 8.96 x 10^12, so the full state space of the sentinel is roughly nine trillion combinations.</desc>
+    <style>
+    .fig-state-space {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --fig-accent: #0083b0;
+      --fig-warn: #e74c3c;
+      --fig-ok: #27ae60;
+      --fig-amber: #e67e22;
+      --fig-panel: rgba(255,255,255,.92);
+    }
+    [data-theme="dark"] .fig-state-space {
+      --fig-accent: #3fb6d8;
+      --fig-warn: #ff6b5e;
+      --fig-ok: #4cd07d;
+      --fig-amber: #f0a04b;
+      --fig-panel: rgba(45,45,63,.95);
+    }
+    .fig-state-space text { fill: var(--text-primary, #2c3e50); }
+    .fig-state-space .muted { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-state-space .secondary { fill: var(--text-secondary, #34495e); }
+    .fig-state-space .ss-title { font-size: 19px; font-weight: 700; }
+    .fig-state-space .ss-sub { font-size: 13.5px; }
+    .fig-state-space .ss-name { font-size: 14.5px; font-weight: 600; fill: var(--text-secondary, #34495e); }
+    .fig-state-space .ss-mult { font-size: 13px; }
+    .fig-state-space .ss-tick { font-size: 13px; }
+    .fig-state-space .ss-axis { font-size: 13px; font-weight: 600; fill: var(--text-secondary, #34495e); }
+    .fig-state-space .ss-val { font-size: 14px; font-weight: 600; fill: var(--fig-accent); }
+    .fig-state-space .ss-val-last { font-size: 14px; font-weight: 700; fill: var(--fig-warn); }
+    .fig-state-space .ss-note { font-size: 13px; }
+    .fig-state-space .ss-panel { fill: var(--fig-panel); stroke: var(--border-color, #dddddd); stroke-width: 1; }
+    .fig-state-space .ss-grid { stroke: var(--border-color, #dddddd); stroke-width: 1; }
+    .fig-state-space .ss-axisline { stroke: var(--border-color, #dddddd); stroke-width: 1.5; }
+    .fig-state-space .ss-callout-box { fill: var(--fig-panel); stroke: var(--fig-warn); stroke-width: 1.6; }
+    .fig-state-space .ss-callout-title { font-size: 19px; font-weight: 700; fill: var(--fig-warn); }
+    .fig-state-space .ss-callout-sub { font-size: 13px; }
+    .fig-state-space .ss-bar { transform-box: fill-box; transform-origin: 0% 50%; animation: figSSGrow .55s cubic-bezier(.2,.85,.3,1) both; }
+    .fig-state-space .ss-bar-last { transform-box: fill-box; transform-origin: 0% 50%; animation: figSSGrow .65s cubic-bezier(.2,.85,.3,1) both; }
+    .fig-state-space .ss-val, .fig-state-space .ss-val-last { animation: figSSFade .5s ease-out both; }
+    .fig-state-space .ss-callout { animation: figSSPop .6s cubic-bezier(.2,.85,.3,1) both; }
+    .fig-state-space .ss-stop-a { stop-color: var(--fig-accent); stop-opacity: 1; }
+    .fig-state-space .ss-stop-b { stop-color: var(--fig-accent, #0083b0); stop-opacity: .55; }
+    .fig-state-space .ss-stop-wa { stop-color: var(--fig-warn); stop-opacity: 1; }
+    .fig-state-space .ss-stop-wb { stop-color: var(--fig-warn); stop-opacity: .55; }
+    @keyframes figSSGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes figSSFade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes figSSPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .fig-state-space .ss-bar, .fig-state-space .ss-bar-last, .fig-state-space .ss-val, .fig-state-space .ss-val-last, .fig-state-space .ss-callout {
+        animation: none !important; opacity: 1 !important; transform: none !important;
+      }
+    }
+  </style>
+  <defs>
+    <linearGradient id="figSSGradAccent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" class="ss-stop-a"/><stop offset="100%" class="ss-stop-b"/>
+    </linearGradient>
+    <linearGradient id="figSSGradWarn" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" class="ss-stop-wa"/><stop offset="100%" class="ss-stop-wb"/>
+    </linearGradient>
+  </defs>
+  <text x="24" y="36" class="ss-title">State-space explosion — 8 parameters are enough</text>
+  <text x="24" y="60" class="muted ss-sub">Each extra parameter multiplies the combinations.</text>
+  <rect class="ss-panel" x="200.0" y="92.0" width="530.0" height="370.0" rx="8"/>
+  <line class="ss-grid" x1="200.0" y1="92.0" x2="200.0" y2="462.0"/>
+  <line class="ss-grid" x1="200.0" y1="462.0" x2="200.0" y2="468.0"/>
+  <line class="ss-grid" x1="281.5" y1="92.0" x2="281.5" y2="462.0"/>
+  <line class="ss-grid" x1="281.5" y1="462.0" x2="281.5" y2="468.0"/>
+  <line class="ss-grid" x1="363.1" y1="92.0" x2="363.1" y2="462.0"/>
+  <line class="ss-grid" x1="363.1" y1="462.0" x2="363.1" y2="468.0"/>
+  <line class="ss-grid" x1="444.6" y1="92.0" x2="444.6" y2="462.0"/>
+  <line class="ss-grid" x1="444.6" y1="462.0" x2="444.6" y2="468.0"/>
+  <line class="ss-grid" x1="526.2" y1="92.0" x2="526.2" y2="462.0"/>
+  <line class="ss-grid" x1="526.2" y1="462.0" x2="526.2" y2="468.0"/>
+  <line class="ss-grid" x1="607.7" y1="92.0" x2="607.7" y2="462.0"/>
+  <line class="ss-grid" x1="607.7" y1="462.0" x2="607.7" y2="468.0"/>
+  <line class="ss-grid" x1="689.2" y1="92.0" x2="689.2" y2="462.0"/>
+  <line class="ss-grid" x1="689.2" y1="462.0" x2="689.2" y2="468.0"/>
+  <line class="ss-axisline" x1="200.0" y1="462.0" x2="730.0" y2="462.0"/>
+  <text x="200.0" y="486.0" class="muted ss-tick" text-anchor="middle">0</text>
+  <text x="281.5" y="486.0" class="muted ss-tick" text-anchor="middle">2</text>
+  <text x="363.1" y="486.0" class="muted ss-tick" text-anchor="middle">4</text>
+  <text x="444.6" y="486.0" class="muted ss-tick" text-anchor="middle">6</text>
+  <text x="526.2" y="486.0" class="muted ss-tick" text-anchor="middle">8</text>
+  <text x="607.7" y="486.0" class="muted ss-tick" text-anchor="middle">10</text>
+  <text x="689.2" y="486.0" class="muted ss-tick" text-anchor="middle">12</text>
+  <text x="200.0" y="510.0" class="ss-axis">log10 (combinations) →</text>
+  <text x="24" y="109" class="ss-name">HP</text>
+  <text x="24" y="127" class="muted ss-mult">×101</text>
+  <rect class="ss-bar" x="200.0" y="99" width="81.7" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:0.35s"/>
+  <text x="916" y="117" class="ss-val" text-anchor="end" style="animation-delay:0.85s">101</text>
+  <text x="24" y="155" class="ss-name">Ammo</text>
+  <text x="24" y="173" class="muted ss-mult">×201</text>
+  <rect class="ss-bar" x="200.0" y="145" width="175.6" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:0.80s"/>
+  <text x="916" y="163" class="ss-val" text-anchor="end" style="animation-delay:1.30s">20,301</text>
+  <text x="24" y="201" class="ss-name">Enemy range</text>
+  <text x="24" y="219" class="muted ss-mult">×4</text>
+  <rect class="ss-bar" x="200.0" y="191" width="200.2" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:1.25s"/>
+  <text x="916" y="209" class="ss-val" text-anchor="end" style="animation-delay:1.75s">81,204</text>
+  <text x="24" y="247" class="ss-name">Enemy HP</text>
+  <text x="24" y="265" class="muted ss-mult">×3</text>
+  <rect class="ss-bar" x="200.0" y="237" width="219.6" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:1.70s"/>
+  <text x="916" y="255" class="ss-val" text-anchor="end" style="animation-delay:2.20s">243,612</text>
+  <text x="24" y="293" class="ss-name">Enemy count</text>
+  <text x="24" y="311" class="muted ss-mult">×6</text>
+  <rect class="ss-bar" x="200.0" y="283" width="251.3" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:2.15s"/>
+  <text x="916" y="301" class="ss-val" text-anchor="end" style="animation-delay:2.65s">1,461,672</text>
+  <text x="24" y="339" class="ss-name">Base HP</text>
+  <text x="24" y="357" class="muted ss-mult">×101</text>
+  <rect class="ss-bar" x="200.0" y="329" width="333.1" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:2.60s"/>
+  <text x="916" y="347" class="ss-val" text-anchor="end" style="animation-delay:3.10s">147,628,872</text>
+  <text x="24" y="385" class="ss-name">Time left (s)</text>
+  <text x="24" y="403" class="muted ss-mult">×601</text>
+  <rect class="ss-bar" x="200.0" y="375" width="446.3" height="26" rx="3" fill="url(#figSSGradAccent)" style="animation-delay:3.05s"/>
+  <text x="916" y="393" class="ss-val" text-anchor="end" style="animation-delay:3.55s">88,724,952,072</text>
+  <text x="24" y="431" class="ss-name">Gimbal temp</text>
+  <text x="24" y="449" class="muted ss-mult">×101</text>
+  <rect class="ss-bar-last" x="200.0" y="421" width="528.1" height="26" rx="3" fill="url(#figSSGradWarn)" style="animation-delay:3.50s"/>
+  <text x="916" y="439" class="ss-val-last" text-anchor="end" style="animation-delay:4.00s">8,961,220,159,272</text>
+  <g class="ss-callout" style="animation-delay:4.15s">
+    <rect class="ss-callout-box" x="452" y="516" width="464" height="60" rx="10"/>
+    <text x="470" y="544" class="ss-callout-title">≈ 8.96 × 10¹² combinations</text>
+    <text x="470" y="566" class="muted ss-callout-sub">the sentinel will meet states nobody scripted</text>
+  </g>
+  <text x="24" y="540" class="muted ss-note">101 × 201 × 4 × 3 × 6 × 101 × 601 × 101</text>
+  <text x="24" y="562" class="muted ss-note">≈ 8.96 × 10¹² board states</text>
+</svg>
+                    <figcaption><b>状态空间爆炸。</b>八个输入参数逐个相乘，组合数冲上 8.96 × 10¹²。横轴为对数刻度——正因为是指数增长，人类才无法靠写分支去覆盖它。</figcaption>
+</figure>
+<p>第二个死穴是<strong>危险条件分支</strong>。它有两种完全不同的形态，后来我才把它们分开：</p>
+<ul>
+<li><strong>连锁调整</strong>：改一个前馈值（比如撤退血量阈值）会牵动整棵树。你以为只挪了一格，实际上是一片区域的行为都变了。</li>
+<li><strong>不可恢复死锁</strong>：某一串条件把你锁进一个分支，进去之后就再也出不来。不是这一帧选错了，而是它根本没有“我已经卡了 40 秒”这种感知。</li>
+</ul>
+<p>这两件事叠在一起，后果就是决策树开发效率极低，而且越写越不敢改。</p>
+<figure class="post-figure">
+<svg class="fig fig-deadlock" viewBox="0 0 940 520" width="100%" style="max-width:100%;height:auto;display:block" role="img" aria-labelledby="figDlTitle figDlDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="figDlTitle">Same stuck state, same decision skeleton — only memory differs</title>
+  <desc id="figDlDesc">Two swimlanes over frames 1 to 40 of the same stuck state, where distance_to_target stays at 90000. Lane A is eve_navigation.xml without memory: all 40 frames repeat the action repeated_approach with duration 10.0s and no parameter ever changes. Lane B is eve_navigation_monitor.xml with monitors: no_progress accumulates, and at frame 32 (no_progress 31.0s) the anchor switches from local_far to local_stuck_escape and the duration changes from 10.0s to 15.0s.</desc>
+    <style>
+    .fig-deadlock {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --fig-accent: #0083b0;
+      --fig-warn: #e74c3c;
+      --fig-ok: #27ae60;
+      --fig-amber: #e67e22;
+      --fig-panel: rgba(255,255,255,.92);
+    }
+    [data-theme="dark"] .fig-deadlock {
+      --fig-accent: #3fb6d8;
+      --fig-warn: #ff6b5e;
+      --fig-ok: #4cd07d;
+      --fig-amber: #f0a04b;
+      --fig-panel: rgba(45,45,63,.95);
+    }
+    .fig-deadlock text { fill: var(--text-primary, #2c3e50); }
+    .fig-deadlock .muted { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-deadlock .secondary { fill: var(--text-secondary, #34495e); }
+    .fig-deadlock .dl-title { font-size: 19px; font-weight: 700; }
+    .fig-deadlock .dl-sub { font-size: 13.5px; }
+    .fig-deadlock .dl-lane { font-size: 15px; font-weight: 700; fill: var(--text-secondary, #34495e); }
+    .fig-deadlock .dl-side { font-size: 13.5px; font-weight: 600; }
+    .fig-deadlock .dl-warn { fill: var(--fig-warn); }
+    .fig-deadlock .dl-ok { fill: var(--fig-ok); }
+    .fig-deadlock .dl-acc { fill: var(--fig-accent); }
+    .fig-deadlock .dl-tick { font-size: 13px; }
+    .fig-deadlock .dl-f32 { font-size: 13.5px; font-weight: 700; fill: var(--fig-accent); animation: figDlF32 6.0s linear infinite both; }
+    .fig-deadlock .dl-cell { fill: var(--fig-warn); fill-opacity: .72; }
+    .fig-deadlock .dl-green { fill: var(--fig-ok); fill-opacity: .92; }
+    .fig-deadlock .dl-playhead { stroke: var(--fig-accent); stroke-width: 2; stroke-opacity: .85; animation: figDlSweep 6.0s linear infinite both; }
+    .fig-deadlock .dl-marker { stroke: var(--fig-accent); stroke-width: 1.6; stroke-dasharray: 5 4; stroke-opacity: .9; }
+    .fig-deadlock .dl-marker-dot { fill: var(--fig-accent); }
+    .fig-deadlock .dl-loop { stroke: var(--fig-warn); stroke-width: 1.6; fill: none; stroke-opacity: .8; }
+    .fig-deadlock .dl-loop-head { fill: var(--fig-warn); }
+    .fig-deadlock .dl-knock { fill: var(--fig-panel); }
+    .fig-deadlock .dl-box { fill: var(--fig-panel); stroke: var(--border-color, #dddddd); stroke-width: 1.2; }
+    .fig-deadlock .dl-box-warn { fill: var(--fig-panel); stroke: var(--fig-warn); stroke-width: 1.4; }
+    .fig-deadlock .dl-box-ok { fill: var(--fig-panel); stroke: var(--fig-ok); stroke-width: 1.4; }
+    .fig-deadlock .dl-box-text { font-size: 13.5px; }
+    .fig-deadlock .dl-box-strong { font-size: 14px; font-weight: 700; }
+    .fig-deadlock .dl-caveat { font-size: 13px; }
+    .fig-deadlock .dl-rule { stroke: var(--border-color, #dddddd); stroke-width: 1; }
+    @keyframes figDlSweep {
+      0% { transform: translateX(0px); opacity: 0; }
+      4% { opacity: 1; }
+      75% { transform: translateX(872px); opacity: 1; }
+      83% { transform: translateX(872px); opacity: 0; }
+      100% { transform: translateX(872px); opacity: 0; }
+    }
+    @keyframes figDlF32 {
+      0%, 56% { opacity: .22; }
+      61%, 85% { opacity: 1; }
+      93%, 100% { opacity: .22; }
+    }
+    @keyframes figDlGreen32 {
+      0%, 59.06% { opacity: 0; }
+      59.96%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-32 { animation: figDlGreen32 6.0s linear infinite both; }
+    @keyframes figDlGreen33 {
+      0%, 60.94% { opacity: 0; }
+      61.84%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-33 { animation: figDlGreen33 6.0s linear infinite both; }
+    @keyframes figDlGreen34 {
+      0%, 62.81% { opacity: 0; }
+      63.71%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-34 { animation: figDlGreen34 6.0s linear infinite both; }
+    @keyframes figDlGreen35 {
+      0%, 64.69% { opacity: 0; }
+      65.59%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-35 { animation: figDlGreen35 6.0s linear infinite both; }
+    @keyframes figDlGreen36 {
+      0%, 66.56% { opacity: 0; }
+      67.46%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-36 { animation: figDlGreen36 6.0s linear infinite both; }
+    @keyframes figDlGreen37 {
+      0%, 68.44% { opacity: 0; }
+      69.34%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-37 { animation: figDlGreen37 6.0s linear infinite both; }
+    @keyframes figDlGreen38 {
+      0%, 70.31% { opacity: 0; }
+      71.21%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-38 { animation: figDlGreen38 6.0s linear infinite both; }
+    @keyframes figDlGreen39 {
+      0%, 72.19% { opacity: 0; }
+      73.09%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-39 { animation: figDlGreen39 6.0s linear infinite both; }
+    @keyframes figDlGreen40 {
+      0%, 74.06% { opacity: 0; }
+      74.96%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-40 { animation: figDlGreen40 6.0s linear infinite both; }
+    @media (prefers-reduced-motion: reduce) {
+      .fig-deadlock .dl-green, .fig-deadlock .dl-f32 {
+        animation: none !important; opacity: 1 !important; transform: none !important;
+      }
+      .fig-deadlock .dl-playhead {
+        animation: none !important; opacity: 0 !important; transform: none !important;
+      }
+    }
+  </style>
+  <defs>
+    <marker id="figDlLoopArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path class="dl-loop-head" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+  <text x="24" y="36" class="dl-title">Same stuck state, same decision skeleton — only memory differs</text>
+  <text x="24" y="60" class="muted dl-sub">Real run · distance_to_target = 90000 in every frame · 40 frames, one decision per frame</text>
+  <line class="dl-rule" x1="24" y1="76" x2="916" y2="76"/>
+  <text x="24" y="104" class="dl-lane">Lane A · eve_navigation.xml — no memory</text>
+  <text x="896" y="104" class="dl-side dl-warn" text-anchor="end">no_progress never accumulates · 40 / 40 frames identical</text>
+  <rect class="dl-cell" data-lane="a" data-frame="1" x="25.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="2" x="46.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="3" x="68.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="4" x="90.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="5" x="112.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="6" x="134.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="7" x="155.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="8" x="177.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="9" x="199.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="10" x="221.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="11" x="243.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="12" x="264.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="13" x="286.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="14" x="308.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="15" x="330.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="16" x="352.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="17" x="373.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="18" x="395.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="19" x="417.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="20" x="439.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="21" x="461.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="22" x="482.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="23" x="504.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="24" x="526.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="25" x="548.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="26" x="570.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="27" x="591.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="28" x="613.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="29" x="635.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="30" x="657.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="31" x="679.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="32" x="700.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="33" x="722.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="34" x="744.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="35" x="766.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="36" x="788.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="37" x="809.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="38" x="831.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="39" x="853.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="40" x="875.2" y="116" width="19.8" height="32" rx="3"/>
+  <path class="dl-loop" d="M 890 152 C 890 192, 30 192, 30 158" marker-end="url(#figDlLoopArrow)"/>
+  <rect class="dl-knock" x="330" y="167" width="282" height="22" rx="6"/>
+  <text x="471" y="183" class="muted dl-box-text" text-anchor="middle">the same decision is recomputed from scratch, forever</text>
+  <rect class="dl-box-warn" x="24" y="204" width="872" height="40" rx="8"/>
+  <text x="44" y="229" class="dl-box-strong dl-warn">Stuck forever — parameters never change</text>
+  <text x="404" y="229" class="muted dl-box-text">action repeated_approach · duration 10.0s · nothing carries over</text>
+  <text x="24" y="284" class="dl-lane">Lane B · eve_navigation_monitor.xml — with monitors</text>
+  <text x="896" y="284" class="dl-side dl-ok" text-anchor="end">no_progress 28.0 → 29.0 → 30.0 → 31.0s</text>
+  <rect class="dl-cell" data-lane="b" data-frame="1" x="25.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="2" x="46.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="3" x="68.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="4" x="90.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="5" x="112.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="6" x="134.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="7" x="155.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="8" x="177.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="9" x="199.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="10" x="221.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="11" x="243.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="12" x="264.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="13" x="286.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="14" x="308.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="15" x="330.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="16" x="352.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="17" x="373.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="18" x="395.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="19" x="417.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="20" x="439.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="21" x="461.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="22" x="482.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="23" x="504.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="24" x="526.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="25" x="548.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="26" x="570.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="27" x="591.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="28" x="613.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="29" x="635.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="30" x="657.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="31" x="679.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="32" x="700.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="33" x="722.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="34" x="744.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="35" x="766.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="36" x="788.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="37" x="809.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="38" x="831.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="39" x="853.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="40" x="875.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-32" data-green="32" x="700.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-33" data-green="33" x="722.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-34" data-green="34" x="744.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-35" data-green="35" x="766.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-36" data-green="36" x="788.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-37" data-green="37" x="809.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-38" data-green="38" x="831.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-39" data-green="39" x="853.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-40" data-green="40" x="875.2" y="296" width="19.8" height="32" rx="3"/>
+  <line class="dl-marker" x1="699.8" y1="266" x2="699.8" y2="344"/>
+  <circle class="dl-marker-dot" cx="699.8" cy="266" r="3.5"/>
+  <text x="691.8" y="262" class="dl-f32" text-anchor="end">frame 32 · no_progress 31.0s</text>
+  <text x="122.1" y="352" class="muted dl-tick" text-anchor="middle">5</text>
+  <text x="231.1" y="352" class="muted dl-tick" text-anchor="middle">10</text>
+  <text x="340.1" y="352" class="muted dl-tick" text-anchor="middle">15</text>
+  <text x="449.1" y="352" class="muted dl-tick" text-anchor="middle">20</text>
+  <text x="558.1" y="352" class="muted dl-tick" text-anchor="middle">25</text>
+  <text x="667.1" y="352" class="muted dl-tick" text-anchor="middle">30</text>
+  <text x="776.1" y="352" class="muted dl-tick" text-anchor="middle">35</text>
+  <text x="885.1" y="352" class="muted dl-tick" text-anchor="middle">40</text>
+  <text x="24" y="352" class="muted dl-tick">frames →</text>
+  <rect class="dl-box-ok" x="24" y="366" width="872" height="54" rx="8"/>
+  <text x="44" y="390" class="muted dl-box-text">frames 29–31 · no_progress 28.0 / 29.0 / 30.0 · anchor local_far</text>
+  <text x="44" y="410" class="dl-box-strong dl-ok">frame 32 · no_progress 31.0s · anchor local_far → local_stuck_escape · duration 10.0s → 15.0s</text>
+  <rect class="dl-box" x="24" y="434" width="872" height="72" rx="8"/>
+  <text x="44" y="460" class="muted dl-caveat">Demo caveat: the escape action reuses the same action name (repeated_approach); only its duration parameter differs.</text>
+  <text x="44" y="482" class="muted dl-caveat">A real deployment should escape to a different action.</text>
+  <line class="dl-playhead" x1="24.0" y1="108" x2="24.0" y2="332"/>
+</svg>
+                    <figcaption><b>同一个卡死场景，同一份决策骨架，差别只在有没有记忆。</b>上泳道是基线档案：40 帧里动作与参数一个字节都没变，永远走不出来；下泳道加了监控变量：第 32 帧（<code>no_progress = 31.0s</code>）锚点从 <code>local_far</code> 切到 <code>local_stuck_escape</code>，<code>duration</code> 从 10.0 秒变 15.0 秒。数据来自项目里真实跑过的演示脚本，不是示意图。</figcaption>
+</figure>
+<h2>为什么是 XML，而不是继续堆 ifelse</h2>
+<p>我最初的动机很直接：<strong>在人类仍然读得懂的前提下，写进更多的决策逻辑</strong>。</p>
+<p>ifelse 写多了会变成屎山，不是因为它不能表达，而是因为它无法被人审计。XML 有结构、有层级、可以被工具校验，人扫一眼就知道这条规则的边界在哪里。</p>
+<p>这里有一个刻意的取舍：<strong>放弃“无限可扩展”，换取“人类可审计 + 精准满足特定需求”</strong>。因为我的使用场景本来就是相对受限的——它不会被无限扩展，反而正是有了框架，才更方便人检查逻辑。</p>
+<h2>XML 前馈 + 轻型网络</h2>
+<p>但光有 XML 还是解决不了“离散、无法变通”的痛点。于是我想到把运动控制里的<strong>前馈 + PID</strong> 搬过来：</p>
+<ul>
+<li><strong>前馈</strong>：基于已知的模型，提前给出粗调基准。反应最快，但应对不了扰动。</li>
+<li><strong>PID</strong>：基于实际误差给出精调增量。反应稍慢，但能修掉静差、抑制扰动。</li>
+</ul>
+<p>映射到决策上就是：<strong>XML 负责前馈，给出大方向上的粗调；轻型网络负责像 PID 一样微操，输出一个叠加在基准之上的增量 Δ。</strong></p>
+<p>XML 里要写清楚三层信息：</p>
+<ol>
+<li><strong>决策锚点</strong>——基准决策点（比如 <code>HP_Threshold = 30%</code>）；</li>
+<li><strong>方向 / 偏置</strong>——可读的语义轨道，说明锚点之间怎么连（比如“对方血量低于 30% 时追击倾向增加”）；</li>
+<li><strong>红线</strong>——硬约束，网络怎么输出都会被钳位（比如“血量低于 10% 强制撤退”）。</li>
+</ol>
+<p>这里最重要的一点是：<strong>改 XML 里的偏置值，就能调整全局决策分布，不需要重新训练网络。</strong></p>
+<figure class="post-figure">
+<svg class="fig fig-architecture" viewBox="0 0 980 600" width="100%" role="img" aria-labelledby="figArchTitle figArchDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="figArchTitle">XML feed-forward plus a lightweight network</title>
+  <desc id="figArchDesc">Current state feeds an XML feed-forward layer (anchors, direction, safety red lines) and a lightweight network with frozen weights. Their outputs merge as baseline plus delta into a continuous decision.</desc>
+  <style>
+    .fig-architecture { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .fig-architecture text { fill: var(--text-primary, #2c3e50); }
+    .fig-architecture .muted { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-architecture .secondary { fill: var(--text-secondary, #34495e); }
+    .fig-architecture .box { fill: rgba(255,255,255,.92); stroke: var(--border-color, #dddddd); stroke-width: 1.5; }
+    .fig-architecture .panel-title { font-size: 17px; font-weight: 600; }
+    .fig-architecture .panel-sub { font-size: 13px; }
+    .fig-architecture .card { fill: rgba(255,255,255,.75); stroke: var(--border-color, #dddddd); stroke-width: 1.2; rx: 8; }
+    .fig-architecture .card-label { font-size: 15px; font-weight: 600; }
+    .fig-architecture .card-desc { font-size: 12.5px; }
+    .fig-architecture .accent-bar { fill: #0083b0; }
+    .fig-architecture .warn-bar { fill: #e74c3c; }
+    .fig-architecture .amber-bar { fill: #e67e22; }
+    .fig-architecture .accent-text { fill: #0083b0; font-weight: 600; }
+    .fig-architecture .warn-text { fill: #e74c3c; font-weight: 600; }
+    .fig-architecture .amber-text { fill: #e67e22; font-weight: 600; }
+    .fig-architecture .flow { stroke: #0083b0; stroke-width: 2; fill: none; }
+    .fig-architecture .flow-dash { stroke: #0083b0; stroke-width: 2; fill: none; stroke-dasharray: 7 7; animation: figArchDash 2.6s linear infinite; }
+    .fig-architecture .flow-amber { stroke: #e67e22; stroke-width: 2.2; fill: none; stroke-dasharray: 8 6; animation: figArchDashRev 3.2s linear infinite; }
+    .fig-architecture .arrow { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-architecture .pulse { animation: figArchPulse 3.4s ease-in-out infinite; transform-origin: center; }
+    .fig-architecture .delta-tag { font-size: 14px; font-weight: 700; }
+    .fig-architecture .note { font-size: 12.5px; }
+    .fig-architecture .note-box { fill: rgba(0,131,176,.08); stroke: rgba(0,131,176,.35); stroke-width: 1; rx: 8; }
+    [data-theme="dark"] .fig-architecture .box { fill: rgba(45,45,63,.95); }
+    [data-theme="dark"] .fig-architecture .card { fill: rgba(45,45,63,.8); }
+    [data-theme="dark"] .fig-architecture .accent-bar { fill: #3fb6d8; }
+    [data-theme="dark"] .fig-architecture .warn-bar { fill: #ff6b5e; }
+    [data-theme="dark"] .fig-architecture .amber-bar { fill: #f0a04b; }
+    [data-theme="dark"] .fig-architecture .accent-text { fill: #3fb6d8; }
+    [data-theme="dark"] .fig-architecture .warn-text { fill: #ff6b5e; }
+    [data-theme="dark"] .fig-architecture .amber-text { fill: #f0a04b; }
+    [data-theme="dark"] .fig-architecture .flow,
+    [data-theme="dark"] .fig-architecture .flow-dash { stroke: #3fb6d8; }
+    [data-theme="dark"] .fig-architecture .flow-amber { stroke: #f0a04b; }
+    [data-theme="dark"] .fig-architecture .note-box { fill: rgba(63,182,216,.10); stroke: rgba(63,182,216,.35); }
+    @keyframes figArchDash { to { stroke-dashoffset: -56; } }
+    @keyframes figArchDashRev { to { stroke-dashoffset: 56; } }
+    @keyframes figArchPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .fig-architecture .flow-dash,
+      .fig-architecture .flow-amber,
+      .fig-architecture .pulse { animation: none !important; opacity: 1 !important; }
+    }
+  </style>
+
+  <!-- title -->
+  <text x="24" y="34" class="panel-title">XML feed-forward + lightweight network</text>
+  <text x="24" y="56" class="muted panel-sub">XML decides what must not happen; the network decides what to do inside the allowed range.</text>
+
+  <!-- input -->
+  <rect class="box" x="24" y="90" width="180" height="120" rx="10"/>
+  <text x="114" y="118" text-anchor="middle" class="panel-title" style="font-size:15px">Current state</text>
+  <text x="114" y="142" text-anchor="middle" class="muted card-desc">HP · ammo · enemy range</text>
+  <text x="114" y="160" text-anchor="middle" class="muted card-desc">enemy count · time left</text>
+  <text x="114" y="178" text-anchor="middle" class="muted card-desc">gimbal temp · ...</text>
+  <text x="114" y="200" text-anchor="middle" class="secondary card-desc">fully observable, every frame</text>
+
+  <!-- XML layer -->
+  <rect class="box" x="272" y="90" width="330" height="252" rx="12"/>
+  <text x="292" y="118" class="panel-title" style="font-size:15px">XML feed-forward layer</text>
+  <text x="292" y="137" class="muted card-desc">human-readable, auditable, offline-tunable</text>
+
+  <rect class="card" x="290" y="150" width="294" height="54" rx="8"/>
+  <rect class="accent-bar" x="290" y="150" width="5" height="54" rx="2.5"/>
+  <text x="308" y="172" class="card-label accent-text">1 · Anchors</text>
+  <text x="308" y="191" class="muted card-desc">baseline decision points: HP &lt; 30%</text>
+
+  <rect class="card" x="290" y="212" width="294" height="54" rx="8"/>
+  <rect class="amber-bar" x="290" y="212" width="5" height="54" rx="2.5"/>
+  <text x="308" y="234" class="card-label amber-text">2 · Direction / bias</text>
+  <text x="308" y="253" class="muted card-desc">how anchors link: chase harder below 30% HP</text>
+
+  <rect class="card" x="290" y="274" width="294" height="54" rx="8"/>
+  <rect class="warn-bar" x="290" y="274" width="5" height="54" rx="2.5"/>
+  <text x="308" y="296" class="card-label warn-text">3 · Safety red lines</text>
+  <text x="308" y="315" class="muted card-desc">hard clamp: forced retreat below 10% HP</text>
+
+  <!-- network -->
+  <rect class="box" x="272" y="368" width="330" height="150" rx="12"/>
+  <text x="292" y="396" class="panel-title" style="font-size:15px">Lightweight network</text>
+  <text x="292" y="415" class="muted card-desc">input = state features + the XML baseline intent · frozen after training</text>
+  <rect class="card" x="290" y="430" width="294" height="70" rx="8"/>
+  <g class="pulse">
+    <circle cx="322" cy="465" r="6" fill="#0083b0" opacity=".85"/>
+    <circle cx="356" cy="465" r="6" fill="#0083b0" opacity=".7"/>
+    <circle cx="390" cy="465" r="6" fill="#0083b0" opacity=".55"/>
+  </g>
+  <text x="418" y="456" class="accent-text card-label">→ Δ</text>
+  <text x="418" y="476" class="muted card-desc">continuous tweak, no new actions</text>
+  <text x="292" y="508" class="muted note">Sits like PID on top of a feed-forward term.</text>
+
+  <!-- merge -->
+  <rect class="box" x="668" y="196" width="288" height="104" rx="12"/>
+  <text x="812" y="226" text-anchor="middle" class="panel-title" style="font-size:15px">Baseline + Δ</text>
+  <text x="812" y="250" text-anchor="middle" class="secondary card-desc">final = XML baseline + network delta</text>
+  <text x="812" y="272" text-anchor="middle" class="muted card-desc">clamped by the red lines, always</text>
+
+  <rect class="box" x="668" y="330" width="288" height="90" rx="12"/>
+  <text x="812" y="358" text-anchor="middle" class="panel-title" style="font-size:15px">Decision</text>
+  <text x="812" y="382" text-anchor="middle" class="secondary card-desc">continuous intent + parameters</text>
+  <text x="812" y="402" text-anchor="middle" class="muted card-desc">no jump at the 30% cliff</text>
+
+  <!-- connectors: the state feeds BOTH layers; the XML baseline also feeds the network,
+       which is what makes the network a "linker" rather than an independent black box -->
+  <path class="flow" d="M204 140 H272" marker-end="url(#figArchArrow)"/>
+  <path class="flow" d="M204 190 C236 190 236 430 272 430" marker-end="url(#figArchArrow)"/>
+  <path class="flow-dash" d="M400 342 V368" marker-end="url(#figArchArrow)"/>
+  <path class="flow" d="M602 168 C640 168 636 226 668 232" marker-end="url(#figArchArrow)"/>
+  <path class="flow-amber" d="M602 462 C640 462 640 280 668 264" marker-end="url(#figArchArrowAmber)"/>
+  <path class="flow" d="M812 300 V330" marker-end="url(#figArchArrow)"/>
+
+  <defs>
+    <marker id="figArchArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="arrow" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+    <marker id="figArchArrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path fill="#e67e22" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+
+  <!-- annotations -->
+  <text x="612" y="212" class="accent-text delta-tag">baseline</text>
+  <text x="612" y="440" class="amber-text delta-tag">+ Δ</text>
+  <text x="392" y="362" text-anchor="end" class="secondary note">XML baseline</text>
+  <text x="824" y="321" class="secondary note">red-line clamp</text>
+
+  <rect class="note-box" x="24" y="540" width="932" height="44" rx="8"/>
+  <text x="42" y="567" class="secondary note">Tuning the plant means editing an XML bias value — not retraining the network, and not re-flashing the robot.</text>
+</svg>
+                    <figcaption><b>XML 前馈 + 轻型网络。</b>XML 负责「不能做什么」（锚点、方向、红线），网络负责「允许范围内做什么最优」（增量 Δ）。两者汇合成<b>基准 + Δ</b>，再被红线硬性钳位。调参改动的是 XML 里的偏置值，不是网络权重。</figcaption>
+</figure>
+<h2>网络负责的不是“怎么做”，而是“做什么”</h2>
+<p>这一点我纠正过自己好几次。</p>
+<p>决策树的问题不是动作不平滑，而是<strong>不知道该做什么</strong>。所以网络既不是平滑器，也不是运动规划器；时间序列也不该是它的定义性特征——时间序列本质上只是“多拿一些输入参数”的一种方式而已。</p>
+<p>它真正的角色是<strong>状态空间压缩器</strong>：</p>
+<ul>
+<li>传统决策树：人类手动压缩状态空间，输出是开关式的；</li>
+<li>网络：自动学习压缩映射，输出是连续的倾向混合。</li>
+</ul>
+<pre><code>HP = 29%  →  纯撤退
+HP = 31%  →  纯进攻
+                 ↓
+HP = 29%  →  撤退 0.9，进攻 0.1，补给 0.0
+HP = 31%  →  撤退 0.7，进攻 0.2，补给 0.1
+HP = 35%  →  撤退 0.3，进攻 0.6，补给 0.1
+</code></pre>
+<p>没有跳变，只有过渡。</p>
+<figure class="post-figure">
+<svg class="fig fig-continuity" id="figContinuity" viewBox="0 0 980 560" width="100%" role="img" tabindex="0"
+     aria-labelledby="figContTitle figContDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="figContTitle">Discrete switching versus continuous decision space</title>
+  <desc id="figContDesc">Interactive chart comparing a hard if/else threshold at 30% HP with continuous intent from XML anchors plus a network delta. Move the pointer, use arrow keys, or toggle the two modes.</desc>
+  <style>
+    .fig-continuity { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .fig-continuity text { fill: var(--text-primary, #2c3e50); }
+    .fig-continuity .muted { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-continuity .secondary { fill: var(--text-secondary, #34495e); }
+    .fig-continuity .title { font-size: 18px; font-weight: 600; }
+    .fig-continuity .sub { font-size: 13px; }
+    .fig-continuity .tick { font-size: 12px; }
+    .fig-continuity .axis { stroke: var(--border-color, #dddddd); stroke-width: 1; }
+    .fig-continuity .grid { stroke: var(--border-color, #dddddd); stroke-width: 0.6; opacity: .45; }
+    .fig-continuity .plot-bg { fill: rgba(255,255,255,.55); }
+    .fig-continuity .guide { stroke: #0083b0; stroke-width: 1.2; stroke-dasharray: 4 4; opacity: .9; }
+    .fig-continuity .curve-retreat { fill: none; stroke: #0083b0; stroke-width: 2.6; stroke-linecap: round; }
+    .fig-continuity .curve-attack { fill: none; stroke: #e67e22; stroke-width: 2.6; stroke-linecap: round; }
+    .fig-continuity .curve-resupply { fill: none; stroke: #27ae60; stroke-width: 2.6; stroke-linecap: round; }
+    .fig-continuity .anchor-dot { stroke: white; stroke-width: 1.5; }
+    .fig-continuity .anchor-label { font-size: 11.5px; font-weight: 600; }
+    .fig-continuity .btn { fill: rgba(255,255,255,.8); stroke: var(--border-color, #dddddd); stroke-width: 1.2; cursor: pointer; }
+    .fig-continuity .btn-active { fill: #0083b0; stroke: #0083b0; }
+    .fig-continuity .btn-text { font-size: 13.5px; font-weight: 600; cursor: pointer; }
+    .fig-continuity .btn-text-active { fill: #ffffff; }
+    .fig-continuity .panel { fill: rgba(255,255,255,.72); stroke: var(--border-color, #dddddd); stroke-width: 1.2; }
+    .fig-continuity .readout { font-size: 26px; font-weight: 700; }
+    .fig-continuity .bar-track { fill: var(--border-color, #dddddd); opacity: .5; }
+    .fig-continuity .bar-retreat { fill: #0083b0; }
+    .fig-continuity .bar-attack { fill: #e67e22; }
+    .fig-continuity .bar-resupply { fill: #27ae60; }
+    .fig-continuity .bar-value { font-size: 15px; font-weight: 700; }
+    .fig-continuity .note { font-size: 12px; }
+    .fig-continuity .hint { font-size: 12.5px; }
+    [data-theme="dark"] .fig-continuity .plot-bg { fill: rgba(45,45,63,.45); }
+    [data-theme="dark"] .fig-continuity .panel { fill: rgba(45,45,63,.75); }
+    [data-theme="dark"] .fig-continuity .btn { fill: rgba(45,45,63,.8); }
+    [data-theme="dark"] .fig-continuity .btn-active { fill: #3fb6d8; stroke: #3fb6d8; }
+    [data-theme="dark"] .fig-continuity .curve-retreat { stroke: #3fb6d8; }
+    [data-theme="dark"] .fig-continuity .bar-retreat { fill: #3fb6d8; }
+    [data-theme="dark"] .fig-continuity .curve-attack { stroke: #f0a04b; }
+    [data-theme="dark"] .fig-continuity .bar-attack { fill: #f0a04b; }
+    [data-theme="dark"] .fig-continuity .curve-resupply { stroke: #4cd07d; }
+    [data-theme="dark"] .fig-continuity .bar-resupply { fill: #4cd07d; }
+    [data-theme="dark"] .fig-continuity .guide { stroke: #3fb6d8; }
+    [data-theme="dark"] .fig-continuity .anchor-dot { stroke: #2d2d3f; }
+    .fig-continuity:focus { outline: none; }
+    .fig-continuity:focus-visible .plot-bg { stroke: #0083b0; stroke-width: 2; }
+  </style>
+
+  <text x="24" y="34" class="title">A threshold is a cliff — a decision space is a slope</text>
+  <text x="24" y="56" class="muted sub">Same inputs, same anchors. Toggle between the if/else version and the XML + network delta version.</text>
+
+  <!-- mode toggle -->
+  <g class="mode-step" role="button" tabindex="0" aria-label="Show the if/else step version">
+    <rect class="btn" x="676" y="14" width="140" height="34" rx="8"/>
+    <text class="btn-text btn-step-text" x="746" y="36" text-anchor="middle">if / else</text>
+  </g>
+  <g class="mode-cont" role="button" tabindex="0" aria-label="Show the continuous XML plus network version">
+    <rect class="btn" x="822" y="14" width="134" height="34" rx="8"/>
+    <text class="btn-text btn-cont-text" x="889" y="36" text-anchor="middle">XML + Δ</text>
+  </g>
+
+  <!-- plot frame -->
+  <rect class="plot-bg" x="110" y="90" width="590" height="290" rx="6"/>
+  <g class="grid-lines">
+    <line class="grid" x1="110" y1="162.5" x2="700" y2="162.5"/>
+    <line class="grid" x1="110" y1="235" x2="700" y2="235"/>
+    <line class="grid" x1="110" y1="307.5" x2="700" y2="307.5"/>
+  </g>
+  <line class="axis" x1="110" y1="380" x2="700" y2="380"/>
+  <line class="axis" x1="110" y1="90" x2="110" y2="380"/>
+  <text class="tick muted" x="102" y="384" text-anchor="end">0</text>
+  <text class="tick muted" x="102" y="311" text-anchor="end">0.25</text>
+  <text class="tick muted" x="102" y="239" text-anchor="end">0.50</text>
+  <text class="tick muted" x="102" y="166" text-anchor="end">0.75</text>
+  <text class="tick muted" x="102" y="94" text-anchor="end">1.00</text>
+  <text class="tick muted" x="110" y="400" text-anchor="middle">25%</text>
+  <text class="tick muted" x="515" y="400" text-anchor="middle">38%</text>
+  <text class="tick muted" x="700" y="400" text-anchor="middle">45%</text>
+  <text class="tick secondary" x="405" y="424" text-anchor="middle">own HP</text>
+  <text class="tick secondary" x="42" y="235" text-anchor="middle" transform="rotate(-90 42 235)">decision tendency</text>
+
+  <!-- curves injected by script; static fallback keeps the continuous view -->
+  <g id="figContCurves" class="curves"></g>
+  <line id="figContGuide" class="guide" x1="0" y1="90" x2="0" y2="380" style="display:none"/>
+  <g id="figContAnchors"></g>
+
+  <!-- right readout panel -->
+  <rect class="panel" x="726" y="90" width="230" height="290" rx="10"/>
+  <text class="muted sub" x="744" y="118">At own HP</text>
+  <text id="figContHp" class="readout" x="744" y="150">31.0%</text>
+  <text id="figContMode" class="muted note" x="744" y="170">XML + network Δ</text>
+
+  <g class="row-retreat">
+    <text class="secondary tick" x="744" y="203">Retreat</text>
+    <rect class="bar-track" x="744" y="211" width="160" height="12" rx="6"/>
+    <rect id="figContBarRetreat" class="bar-retreat" x="744" y="211" width="0" height="12" rx="6"/>
+    <text id="figContValRetreat" class="bar-value" x="916" y="222" text-anchor="end">0.70</text>
+  </g>
+  <g class="row-attack">
+    <text class="secondary tick" x="744" y="250">Attack</text>
+    <rect class="bar-track" x="744" y="258" width="160" height="12" rx="6"/>
+    <rect id="figContBarAttack" class="bar-attack" x="744" y="258" width="0" height="12" rx="6"/>
+    <text id="figContValAttack" class="bar-value" x="916" y="269" text-anchor="end">0.20</text>
+  </g>
+  <g class="row-resupply">
+    <text class="secondary tick" x="744" y="297">Resupply</text>
+    <rect class="bar-track" x="744" y="305" width="160" height="12" rx="6"/>
+    <rect id="figContBarResupply" class="bar-resupply" x="744" y="305" width="0" height="12" rx="6"/>
+    <text id="figContValResupply" class="bar-value" x="916" y="316" text-anchor="end">0.10</text>
+  </g>
+  <text id="figContVerdict" class="note secondary" x="744" y="352" style="font-weight:600">Anchors: 0.9 / 0.7 / 0.3 …</text>
+  <text class="muted note" x="744" y="372">blended, never snapped</text>
+
+  <!-- legend -->
+  <rect class="bar-retreat" x="110" y="446" width="12" height="12" rx="3"/>
+  <text class="secondary tick" x="130" y="456">Retreat</text>
+  <rect class="bar-attack" x="212" y="446" width="12" height="12" rx="3"/>
+  <text class="secondary tick" x="232" y="456">Attack</text>
+  <rect class="bar-resupply" x="316" y="446" width="12" height="12" rx="3"/>
+  <text class="secondary tick" x="336" y="456">Resupply</text>
+  <text class="muted hint" x="430" y="456">Move the pointer over the chart, or use ← → after clicking it.</text>
+
+  <text class="muted note" x="24" y="492">● markers are the three values quoted in the post (HP = 29% / 31% / 35%): retreat 0.9 / 0.7 / 0.3, attack 0.1 / 0.2 / 0.6, resupply 0.0 / 0.1 / 0.1.</text>
+  <text class="muted note" x="24" y="512">The rest of each curve is interpolated between those anchors — monotone, so it never overshoots or invents a new action.</text>
+  <text class="muted note" x="24" y="536">Red lines still clamp the result: below 10% HP the XML safety layer forces retreat no matter what the network outputs.</text>
+
+  <script>
+  //<![CDATA[
+  (function () {
+    var root = document.getElementById('figContinuity');
+    if (!root || root.getAttribute('data-ready') === '1') { return; }
+    root.setAttribute('data-ready', '1');
+
+    var HP_MIN = 25, HP_MAX = 45;
+    var PLOT = { x0: 110, x1: 700, y0: 90, y1: 380 };   // y0 = value 1, y1 = value 0
+
+    // Documented anchors (from the post): HP 29 / 31 / 35.
+    // The surrounding points are plausible shaping so the curve covers the axis;
+    // interpolation is monotone cubic, so no overshoot between anchors.
+    var POINTS = [
+      { hp: 25, retreat: 1.00, attack: 0.00, resupply: 0.00 },
+      { hp: 29, retreat: 0.90, attack: 0.10, resupply: 0.00 },
+      { hp: 31, retreat: 0.70, attack: 0.20, resupply: 0.10 },
+      { hp: 33, retreat: 0.50, attack: 0.40, resupply: 0.10 },
+      { hp: 35, retreat: 0.30, attack: 0.60, resupply: 0.10 },
+      { hp: 38, retreat: 0.12, attack: 0.80, resupply: 0.08 },
+      { hp: 41, retreat: 0.05, attack: 0.90, resupply: 0.05 },
+      { hp: 45, retreat: 0.02, attack: 0.95, resupply: 0.03 }
+    ];
+    var KEYS = ['retreat', 'attack', 'resupply'];
+    var ACTIVE = { retreat: 'figContBarRetreat', attack: 'figContBarAttack', resupply: 'figContBarResupply' };
+    var VALUES = { retreat: 'figContValRetreat', attack: 'figContValAttack', resupply: 'figContValResupply' };
+
+    function monotoneSlopes(xs, ys) {
+      var n = xs.length, h = [], d = [], m = [], i;
+      for (i = 0; i < n - 1; i++) {
+        h[i] = xs[i + 1] - xs[i];
+        d[i] = (ys[i + 1] - ys[i]) / h[i];
+      }
+      m[0] = d[0]; m[n - 1] = d[n - 2];
+      for (i = 1; i < n - 1; i++) {
+        m[i] = (d[i - 1] * d[i] <= 0) ? 0 : (d[i - 1] + d[i]) / 2;
+      }
+      for (i = 0; i < n - 1; i++) {
+        if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+        var a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
+        if (s > 9) {
+          var t = 3 / Math.sqrt(s);
+          m[i] = t * a * d[i];
+          m[i + 1] = t * b * d[i];
+        }
+      }
+      return { h: h, m: m };
+    }
+
+    function evaluate(key) {
+      var xs = POINTS.map(function (p) { return p.hp; });
+      var ys = POINTS.map(function (p) { return p[key]; });
+      var st = monotoneSlopes(xs, ys), n = xs.length;
+      return function (hp) {
+        if (hp <= xs[0]) { return ys[0]; }
+        if (hp >= xs[n - 1]) { return ys[n - 1]; }
+        var i = 0;
+        while (i < n - 2 && hp > xs[i + 1]) { i++; }
+        var t = (hp - xs[i]) / st.h[i], t2 = t * t, t3 = t2 * t;
+        var h00 = 2 * t3 - 3 * t2 + 1, h10 = t3 - 2 * t2 + t;
+        var h01 = -2 * t3 + 3 * t2, h11 = t3 - t2;
+        return h00 * ys[i] + h10 * st.h[i] * st.m[i] + h01 * ys[i + 1] + h11 * st.h[i] * st.m[i + 1];
+      };
+    }
+
+    var evalFn = {};
+    KEYS.forEach(function (k) { evalFn[k] = evaluate(k); });
+
+    function toX(hp) { return PLOT.x0 + (hp - HP_MIN) / (HP_MAX - HP_MIN) * (PLOT.x1 - PLOT.x0); }
+    function toY(v) { return PLOT.y1 - v * (PLOT.y1 - PLOT.y0); }
+
+    function stepValue(key, hp) {
+      // The if/else version: a single threshold at 30% HP.
+      if (key === 'retreat') { return hp < 30 ? 1 : 0; }
+      if (key === 'attack') { return hp < 30 ? 0 : 1; }
+      return 0.05;
+    }
+
+    function buildPath(mode, key) {
+      var d = '', first = true, i, hp, v;
+      if (mode === 'step') {
+        // draw true steps: two samples per segment with a vertical jump at 30%
+        var xs = [];
+        for (i = 0; i <= 400; i++) { xs.push(HP_MIN + (HP_MAX - HP_MIN) * i / 400); }
+        for (i = 0; i < xs.length; i++) {
+          hp = xs[i]; v = stepValue(key, hp);
+          if (first) { d += 'M' + toX(hp).toFixed(2) + ' ' + toY(v).toFixed(2); first = false; }
+          else {
+            var prev = stepValue(key, xs[i - 1]);
+            if (v !== prev) { d += ' L' + toX(hp).toFixed(2) + ' ' + toY(prev).toFixed(2); }
+            d += ' L' + toX(hp).toFixed(2) + ' ' + toY(v).toFixed(2);
+          }
+        }
+        return d;
+      }
+      for (i = 0; i <= 400; i++) {
+        hp = HP_MIN + (HP_MAX - HP_MIN) * i / 400;
+        v = Math.max(0, Math.min(1, evalFn[key](hp)));
+        d += (first ? 'M' : ' L') + toX(hp).toFixed(2) + ' ' + toY(v).toFixed(2);
+        first = false;
+      }
+      return d;
+    }
+
+    var NS = 'http://www.w3.org/2000/svg';
+    var curvesG = document.getElementById('figContCurves');
+    var anchorsG = document.getElementById('figContAnchors');
+    var paths = { step: {}, cont: {} };
+
+    KEYS.forEach(function (k) {
+      ['step', 'cont'].forEach(function (mode) {
+        var p = document.createElementNS(NS, 'path');
+        p.setAttribute('class', 'curve-' + k);
+        p.setAttribute('d', buildPath(mode, k));
+        p.setAttribute('data-mode', mode);
+        curvesG.appendChild(p);
+        paths[mode][k] = p;
+      });
+    });
+
+    var ANCHOR_HP = [29, 31, 35];
+    ANCHOR_HP.forEach(function (hp) {
+      KEYS.forEach(function (k) {
+        var c = document.createElementNS(NS, 'circle');
+        c.setAttribute('class', 'anchor-dot');
+        c.setAttribute('cx', toX(hp).toFixed(2));
+        c.setAttribute('cy', toY(evalFn[k](hp)).toFixed(2));
+        c.setAttribute('r', 4);
+        c.setAttribute('fill', k === 'retreat' ? '#0083b0' : (k === 'attack' ? '#e67e22' : '#27ae60'));
+        anchorsG.appendChild(c);
+      });
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('class', 'anchor-label muted');
+      t.setAttribute('x', toX(hp).toFixed(2));
+      t.setAttribute('y', (PLOT.y1 + 18).toFixed(2));
+      t.setAttribute('text-anchor', 'middle');
+      t.textContent = hp + '%';
+      anchorsG.appendChild(t);
+    });
+
+    var guide = document.getElementById('figContGuide');
+    var hpOut = document.getElementById('figContHp');
+    var modeOut = document.getElementById('figContMode');
+    var verdict = document.getElementById('figContVerdict');
+    var state = { hp: 31, mode: 'cont' };
+
+    function valueAt(key, hp) {
+      return state.mode === 'step' ? stepValue(key, hp) : Math.max(0, Math.min(1, evalFn[key](hp)));
+    }
+
+    function render() {
+      var hp = state.hp, step = state.mode === 'step';
+      KEYS.forEach(function (k) {
+        paths.step[k].style.display = step ? '' : 'none';
+        paths.cont[k].style.display = step ? 'none' : '';
+      });
+      anchorsG.style.display = step ? 'none' : '';
+      guide.style.display = '';
+      guide.setAttribute('x1', toX(hp).toFixed(2));
+      guide.setAttribute('x2', toX(hp).toFixed(2));
+      hpOut.textContent = hp.toFixed(1) + '%';
+      modeOut.textContent = step ? 'if / else — one threshold at 30%' : 'XML + network Δ';
+      KEYS.forEach(function (k) {
+        var v = valueAt(k, hp);
+        document.getElementById(ACTIVE[k]).setAttribute('width', (v * 160).toFixed(2));
+        document.getElementById(VALUES[k]).textContent = v.toFixed(2);
+      });
+      if (step) {
+        verdict.textContent = hp < 30 ? 'Retreat 100% — snapped' : 'Attack 100% — snapped';
+      } else {
+        verdict.textContent = 'Blended: ' + [valueAt('retreat', hp), valueAt('attack', hp), valueAt('resupply', hp)]
+          .map(function (v) { return v.toFixed(2); }).join(' / ');
+      }
+      root.setAttribute('aria-label',
+        'Own HP ' + hp.toFixed(1) + '%. Retreat ' + valueAt('retreat', hp).toFixed(2) +
+        ', attack ' + valueAt('attack', hp).toFixed(2) + ', resupply ' + valueAt('resupply', hp).toFixed(2) + '.');
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      var step = mode === 'step';
+      document.querySelector('.fig-continuity .mode-step .btn').classList.toggle('btn-active', step);
+      document.querySelector('.fig-continuity .mode-cont .btn').classList.toggle('btn-active', !step);
+      document.querySelector('.fig-continuity .btn-step-text').classList.toggle('btn-text-active', step);
+      document.querySelector('.fig-continuity .btn-cont-text').classList.toggle('btn-text-active', !step);
+      render();
+    }
+
+    // Only the plot rectangle reacts to the pointer: clicking the mode buttons,
+    // the legend or the readout panel must not silently move the cursor.
+    function hpFromEvent(evt) {
+      var box = root.getBoundingClientRect();
+      var scale = 980 / box.width;
+      var x = (evt.clientX - box.left) * scale;
+      var y = (evt.clientY - box.top) * scale;
+      if (x < PLOT.x0 || x > PLOT.x1 || y < PLOT.y0 || y > PLOT.y1) { return null; }
+      var hp = HP_MIN + (x - PLOT.x0) / (PLOT.x1 - PLOT.x0) * (HP_MAX - HP_MIN);
+      return Math.max(HP_MIN, Math.min(HP_MAX, hp));
+    }
+
+    function handlePointer(e) {
+      var hp = hpFromEvent(e);
+      if (hp === null) { return; }
+      state.hp = hp;
+      render();
+    }
+
+    root.addEventListener('pointermove', handlePointer);
+    root.addEventListener('pointerdown', handlePointer);
+    document.querySelector('.fig-continuity .mode-step').addEventListener('click', function () { setMode('step'); });
+    document.querySelector('.fig-continuity .mode-cont').addEventListener('click', function () { setMode('cont'); });
+    document.querySelector('.fig-continuity .mode-step').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMode('step'); }
+    });
+    document.querySelector('.fig-continuity .mode-cont').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMode('cont'); }
+    });
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { state.hp = Math.min(HP_MAX, state.hp + 0.5); render(); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { state.hp = Math.max(HP_MIN, state.hp - 0.5); render(); e.preventDefault(); }
+    });
+
+    setMode('cont');
+  })();
+  //]]>
+  </script>
+</svg>
+                    <figcaption><b>阈值是悬崖，决策空间是斜坡。</b>可在右上角切换两种视图：<code>if / else</code> 在 30% 处硬跳变，<code>XML + Δ</code> 则是连续倾向的混合。把指针移到曲线上（或点一下图后用 ← → ）可以看到任意血量下的三类倾向数值；圆点标出的 29% / 31% / 35% 正是正文里引用的三个锚点值。</figcaption>
+</figure>
+<p>那网络要学什么？我后来把这个问题收敛成一句话：<strong>它不学策略，它只负责把不同的 XML 前馈链接起来。</strong></p>
+<p>原因很现实：我拿不到大量优质的数据集。脚本的操作高度重复，帧与帧之间只差一个幅度；而 RM 的每一次决策都高度依赖这一场的战术，几乎没有可供学习的精细操作录像。既然写不出、也不想写的那段“连接”是最难的部分，那就交给网络去补。</p>
+<h2>关于“没有反馈”</h2>
+<p>还有一个我坚持的表述：<strong>这不是强化学习意义上的反馈。</strong></p>
+<p>对脚本来说，任何信息在任何时刻可知的，就在任何时刻可知；于是任何时刻输入的信息，都可以看作是上一时刻输出的反馈——那也就等于说没有反馈。只需要尽可能多地拿到输入参数，决策自然会根据历史的输入输出记录来做。至于 RM 的决策就更没有绝对对错：哨兵只是其中一个兵种，它的所有决策都服务于整体战术。一个局部看起来“浪费输出机会”的动作，可能在战术上是对的。</p>
+<p>所以这套架构里<strong>不引入奖励信号，也不做在线学习</strong>。设计重心不是“怎么定义奖励”，而是“怎么尽可能多拿输入参数”。</p>
+<h2>为什么先拿游戏脚本做测试</h2>
+<p>想验证的东西和真实比赛是一样的：决策树能不能被“连续化”，微调能不能不再牵动整棵树。</p>
+<p>而游戏脚本与它有很强的共同性——同样是感知→决策→动作的闭环，同样要处理状态组合爆炸。</p>
+<p>再加上一个现实条件：<strong>赛季初无车可调</strong>。那就先在游戏脚本上做先行测试。它的好处是信息完全可观测、可复现、可以离线反复跑，步子迈得起。</p>
+<p>后面如果真的走通了，迁移到哨兵上的形态也已经想清楚：游戏阶段训练网络，<strong>部署到机器人上的权重完全冻结，只做推理</strong>；需要调整时，改 XML 里的目标值、偏置和边界，而不是重新训练、重新烧录。</p>
+<h2>后来被推翻的部分</h2>
+<p>既然是序章，就得诚实一点：这里很多想法后来被我自己推翻了。</p>
+<ul>
+<li>我一度以为“网络做了软混合，输出不再是离散跳转，所以危险分支只是低概率输出，不会死锁”——<strong>这条站不住</strong>。实现上根本没有软混合，软化只发生在分数层，输出仍然是离散跳转；更根本的是，软化只改变“选哪个”的边界，<strong>不改变“我卡了多久”的感知</strong>，软策略照样会被闭环锁死。</li>
+<li>由此我改了架构的定位：它<strong>不是纯决策树</strong>，而是<strong>混合自动机——状态机（提供记忆与模式切换）+ 前馈决策树（锚点→偏置→红线）+ 学习残差（网络 Δ）</strong>。记忆和监控变量（无进展秒数、同锚点重复命中、距离是否单调下降）必须是一等公民，不是外挂补丁。</li>
+<li>后来去翻文献才发现，这套东西并不孤独：它在“神经树 / 神经符号系统”里有明确的谱系归属，一些当年以为是原创的取舍，其实早有人形式化地论证过；而“危险分支”那两类问题，也各自有该去的地方找答案。</li>
+</ul>
+<p>被推翻不可怕，可怕的是没记录。所以我打算把这条线一直写下去。</p>
+<h2>最后</h2>
+<p>以上都还是初步的想法，这个系列会持续更新——走一步，改一步。</p>
+<p>最后引用一句话：让我们<strong>“无限进步”</strong>。</p>
+                </div>
+                <div class="post-footer-nav">
+                    <a href="../blog.html">← Back to all posts</a>
+                    <a href="../index.html">Home</a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 FLumine</p>
+    </footer>
+
+    <script>
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            themeToggle?.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initThemeToggle);
+        } else {
+            initThemeToggle();
+        }
+    </script>
+</body>
+</html>

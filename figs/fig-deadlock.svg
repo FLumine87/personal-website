@@ -1,0 +1,248 @@
+<svg class="fig fig-deadlock" viewBox="0 0 940 520" width="100%" style="max-width:100%;height:auto;display:block" role="img" aria-labelledby="figDlTitle figDlDesc" xmlns="http://www.w3.org/2000/svg">
+  <title id="figDlTitle">Same stuck state, same decision skeleton — only memory differs</title>
+  <desc id="figDlDesc">Two swimlanes over frames 1 to 40 of the same stuck state, where distance_to_target stays at 90000. Lane A is eve_navigation.xml without memory: all 40 frames repeat the action repeated_approach with duration 10.0s and no parameter ever changes. Lane B is eve_navigation_monitor.xml with monitors: no_progress accumulates, and at frame 32 (no_progress 31.0s) the anchor switches from local_far to local_stuck_escape and the duration changes from 10.0s to 15.0s.</desc>
+    <style>
+    .fig-deadlock {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --fig-accent: #0083b0;
+      --fig-warn: #e74c3c;
+      --fig-ok: #27ae60;
+      --fig-amber: #e67e22;
+      --fig-panel: rgba(255,255,255,.92);
+    }
+    [data-theme="dark"] .fig-deadlock {
+      --fig-accent: #3fb6d8;
+      --fig-warn: #ff6b5e;
+      --fig-ok: #4cd07d;
+      --fig-amber: #f0a04b;
+      --fig-panel: rgba(45,45,63,.95);
+    }
+    .fig-deadlock text { fill: var(--text-primary, #2c3e50); }
+    .fig-deadlock .muted { fill: var(--text-tertiary, #7f8c8d); }
+    .fig-deadlock .secondary { fill: var(--text-secondary, #34495e); }
+    .fig-deadlock .dl-title { font-size: 19px; font-weight: 700; }
+    .fig-deadlock .dl-sub { font-size: 13.5px; }
+    .fig-deadlock .dl-lane { font-size: 15px; font-weight: 700; fill: var(--text-secondary, #34495e); }
+    .fig-deadlock .dl-side { font-size: 13.5px; font-weight: 600; }
+    .fig-deadlock .dl-warn { fill: var(--fig-warn); }
+    .fig-deadlock .dl-ok { fill: var(--fig-ok); }
+    .fig-deadlock .dl-acc { fill: var(--fig-accent); }
+    .fig-deadlock .dl-tick { font-size: 13px; }
+    .fig-deadlock .dl-f32 { font-size: 13.5px; font-weight: 700; fill: var(--fig-accent); animation: figDlF32 6.0s linear infinite both; }
+    .fig-deadlock .dl-cell { fill: var(--fig-warn); fill-opacity: .72; }
+    .fig-deadlock .dl-green { fill: var(--fig-ok); fill-opacity: .92; }
+    .fig-deadlock .dl-playhead { stroke: var(--fig-accent); stroke-width: 2; stroke-opacity: .85; animation: figDlSweep 6.0s linear infinite both; }
+    .fig-deadlock .dl-marker { stroke: var(--fig-accent); stroke-width: 1.6; stroke-dasharray: 5 4; stroke-opacity: .9; }
+    .fig-deadlock .dl-marker-dot { fill: var(--fig-accent); }
+    .fig-deadlock .dl-loop { stroke: var(--fig-warn); stroke-width: 1.6; fill: none; stroke-opacity: .8; }
+    .fig-deadlock .dl-loop-head { fill: var(--fig-warn); }
+    .fig-deadlock .dl-knock { fill: var(--fig-panel); }
+    .fig-deadlock .dl-box { fill: var(--fig-panel); stroke: var(--border-color, #dddddd); stroke-width: 1.2; }
+    .fig-deadlock .dl-box-warn { fill: var(--fig-panel); stroke: var(--fig-warn); stroke-width: 1.4; }
+    .fig-deadlock .dl-box-ok { fill: var(--fig-panel); stroke: var(--fig-ok); stroke-width: 1.4; }
+    .fig-deadlock .dl-box-text { font-size: 13.5px; }
+    .fig-deadlock .dl-box-strong { font-size: 14px; font-weight: 700; }
+    .fig-deadlock .dl-caveat { font-size: 13px; }
+    .fig-deadlock .dl-rule { stroke: var(--border-color, #dddddd); stroke-width: 1; }
+    @keyframes figDlSweep {
+      0% { transform: translateX(0px); opacity: 0; }
+      4% { opacity: 1; }
+      75% { transform: translateX(872px); opacity: 1; }
+      83% { transform: translateX(872px); opacity: 0; }
+      100% { transform: translateX(872px); opacity: 0; }
+    }
+    @keyframes figDlF32 {
+      0%, 56% { opacity: .22; }
+      61%, 85% { opacity: 1; }
+      93%, 100% { opacity: .22; }
+    }
+    @keyframes figDlGreen32 {
+      0%, 59.06% { opacity: 0; }
+      59.96%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-32 { animation: figDlGreen32 6.0s linear infinite both; }
+    @keyframes figDlGreen33 {
+      0%, 60.94% { opacity: 0; }
+      61.84%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-33 { animation: figDlGreen33 6.0s linear infinite both; }
+    @keyframes figDlGreen34 {
+      0%, 62.81% { opacity: 0; }
+      63.71%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-34 { animation: figDlGreen34 6.0s linear infinite both; }
+    @keyframes figDlGreen35 {
+      0%, 64.69% { opacity: 0; }
+      65.59%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-35 { animation: figDlGreen35 6.0s linear infinite both; }
+    @keyframes figDlGreen36 {
+      0%, 66.56% { opacity: 0; }
+      67.46%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-36 { animation: figDlGreen36 6.0s linear infinite both; }
+    @keyframes figDlGreen37 {
+      0%, 68.44% { opacity: 0; }
+      69.34%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-37 { animation: figDlGreen37 6.0s linear infinite both; }
+    @keyframes figDlGreen38 {
+      0%, 70.31% { opacity: 0; }
+      71.21%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-38 { animation: figDlGreen38 6.0s linear infinite both; }
+    @keyframes figDlGreen39 {
+      0%, 72.19% { opacity: 0; }
+      73.09%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-39 { animation: figDlGreen39 6.0s linear infinite both; }
+    @keyframes figDlGreen40 {
+      0%, 74.06% { opacity: 0; }
+      74.96%, 90% { opacity: 1; }
+      96.67%, 100% { opacity: 0; }
+    }
+    .fig-deadlock .dl-green-40 { animation: figDlGreen40 6.0s linear infinite both; }
+    @media (prefers-reduced-motion: reduce) {
+      .fig-deadlock .dl-green, .fig-deadlock .dl-f32 {
+        animation: none !important; opacity: 1 !important; transform: none !important;
+      }
+      .fig-deadlock .dl-playhead {
+        animation: none !important; opacity: 0 !important; transform: none !important;
+      }
+    }
+  </style>
+  <defs>
+    <marker id="figDlLoopArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path class="dl-loop-head" d="M0 0 L10 5 L0 10 z"/>
+    </marker>
+  </defs>
+  <text x="24" y="36" class="dl-title">Same stuck state, same decision skeleton — only memory differs</text>
+  <text x="24" y="60" class="muted dl-sub">Real run · distance_to_target = 90000 in every frame · 40 frames, one decision per frame</text>
+  <line class="dl-rule" x1="24" y1="76" x2="916" y2="76"/>
+  <text x="24" y="104" class="dl-lane">Lane A · eve_navigation.xml — no memory</text>
+  <text x="896" y="104" class="dl-side dl-warn" text-anchor="end">no_progress never accumulates · 40 / 40 frames identical</text>
+  <rect class="dl-cell" data-lane="a" data-frame="1" x="25.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="2" x="46.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="3" x="68.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="4" x="90.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="5" x="112.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="6" x="134.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="7" x="155.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="8" x="177.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="9" x="199.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="10" x="221.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="11" x="243.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="12" x="264.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="13" x="286.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="14" x="308.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="15" x="330.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="16" x="352.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="17" x="373.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="18" x="395.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="19" x="417.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="20" x="439.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="21" x="461.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="22" x="482.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="23" x="504.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="24" x="526.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="25" x="548.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="26" x="570.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="27" x="591.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="28" x="613.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="29" x="635.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="30" x="657.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="31" x="679.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="32" x="700.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="33" x="722.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="34" x="744.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="35" x="766.2" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="36" x="788.0" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="37" x="809.8" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="38" x="831.6" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="39" x="853.4" y="116" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="a" data-frame="40" x="875.2" y="116" width="19.8" height="32" rx="3"/>
+  <path class="dl-loop" d="M 890 152 C 890 192, 30 192, 30 158" marker-end="url(#figDlLoopArrow)"/>
+  <rect class="dl-knock" x="330" y="167" width="282" height="22" rx="6"/>
+  <text x="471" y="183" class="muted dl-box-text" text-anchor="middle">the same decision is recomputed from scratch, forever</text>
+  <rect class="dl-box-warn" x="24" y="204" width="872" height="40" rx="8"/>
+  <text x="44" y="229" class="dl-box-strong dl-warn">Stuck forever — parameters never change</text>
+  <text x="404" y="229" class="muted dl-box-text">action repeated_approach · duration 10.0s · nothing carries over</text>
+  <text x="24" y="284" class="dl-lane">Lane B · eve_navigation_monitor.xml — with monitors</text>
+  <text x="896" y="284" class="dl-side dl-ok" text-anchor="end">no_progress 28.0 → 29.0 → 30.0 → 31.0s</text>
+  <rect class="dl-cell" data-lane="b" data-frame="1" x="25.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="2" x="46.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="3" x="68.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="4" x="90.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="5" x="112.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="6" x="134.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="7" x="155.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="8" x="177.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="9" x="199.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="10" x="221.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="11" x="243.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="12" x="264.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="13" x="286.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="14" x="308.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="15" x="330.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="16" x="352.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="17" x="373.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="18" x="395.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="19" x="417.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="20" x="439.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="21" x="461.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="22" x="482.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="23" x="504.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="24" x="526.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="25" x="548.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="26" x="570.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="27" x="591.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="28" x="613.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="29" x="635.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="30" x="657.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="31" x="679.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="32" x="700.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="33" x="722.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="34" x="744.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="35" x="766.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="36" x="788.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="37" x="809.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="38" x="831.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="39" x="853.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-cell" data-lane="b" data-frame="40" x="875.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-32" data-green="32" x="700.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-33" data-green="33" x="722.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-34" data-green="34" x="744.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-35" data-green="35" x="766.2" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-36" data-green="36" x="788.0" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-37" data-green="37" x="809.8" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-38" data-green="38" x="831.6" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-39" data-green="39" x="853.4" y="296" width="19.8" height="32" rx="3"/>
+  <rect class="dl-green dl-green-40" data-green="40" x="875.2" y="296" width="19.8" height="32" rx="3"/>
+  <line class="dl-marker" x1="699.8" y1="266" x2="699.8" y2="344"/>
+  <circle class="dl-marker-dot" cx="699.8" cy="266" r="3.5"/>
+  <text x="691.8" y="262" class="dl-f32" text-anchor="end">frame 32 · no_progress 31.0s</text>
+  <text x="122.1" y="352" class="muted dl-tick" text-anchor="middle">5</text>
+  <text x="231.1" y="352" class="muted dl-tick" text-anchor="middle">10</text>
+  <text x="340.1" y="352" class="muted dl-tick" text-anchor="middle">15</text>
+  <text x="449.1" y="352" class="muted dl-tick" text-anchor="middle">20</text>
+  <text x="558.1" y="352" class="muted dl-tick" text-anchor="middle">25</text>
+  <text x="667.1" y="352" class="muted dl-tick" text-anchor="middle">30</text>
+  <text x="776.1" y="352" class="muted dl-tick" text-anchor="middle">35</text>
+  <text x="885.1" y="352" class="muted dl-tick" text-anchor="middle">40</text>
+  <text x="24" y="352" class="muted dl-tick">frames →</text>
+  <rect class="dl-box-ok" x="24" y="366" width="872" height="54" rx="8"/>
+  <text x="44" y="390" class="muted dl-box-text">frames 29–31 · no_progress 28.0 / 29.0 / 30.0 · anchor local_far</text>
+  <text x="44" y="410" class="dl-box-strong dl-ok">frame 32 · no_progress 31.0s · anchor local_far → local_stuck_escape · duration 10.0s → 15.0s</text>
+  <rect class="dl-box" x="24" y="434" width="872" height="72" rx="8"/>
+  <text x="44" y="460" class="muted dl-caveat">Demo caveat: the escape action reuses the same action name (repeated_approach); only its duration parameter differs.</text>
+  <text x="44" y="482" class="muted dl-caveat">A real deployment should escape to a different action.</text>
+  <line class="dl-playhead" x1="24.0" y1="108" x2="24.0" y2="332"/>
+</svg>
